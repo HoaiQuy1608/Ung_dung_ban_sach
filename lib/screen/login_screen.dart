@@ -14,6 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   String? _errorMessage;
+  bool _isPasswordVisible = false;
 
   void _handleLogin() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -40,25 +41,50 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Đăng Nhập')),
-      // Đã thêm SingleChildScrollView để khắc phục lỗi Overflowed
+      appBar: AppBar(
+        title: const Text(
+          'CỬA HÀNG SÁCH',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.deepPurple,
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(30.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'Đăng Nhập Tài Khoản',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 50),
 
+              const Align(
+                alignment: Alignment.center,
+                child: Text(
+                  'ĐĂNG NHẬP',
+                  style: TextStyle(
+                    fontSize: 28, // Kích thước lớn
+                    fontWeight: FontWeight.w900,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Tiêu đề phụ
+              const Align(
+                alignment: Alignment.center,
+                child: Text(
+                  'Nhập thông tin để tiếp tục mua sắm!',
+                  style: TextStyle(fontSize: 16, color: Colors.blueGrey),
+                ),
+              ),
+
+              const SizedBox(height: 50), // Khoảng cách tới ô nhập liệu
+              // Hiển thị lỗi
               if (_errorMessage != null)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.only(bottom: 20),
                   child: Text(
                     _errorMessage!,
                     style: const TextStyle(
@@ -69,6 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
+              // TextField Email
               TextField(
                 controller: _emailController,
                 decoration: const InputDecoration(
@@ -80,26 +107,46 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
 
+              // TextField Mật khẩu
               TextField(
                 controller: _passwordController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Mật khẩu',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                  ),
                 ),
-                obscureText: true,
+                obscureText: !_isPasswordVisible,
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 50),
 
+              // Nút Đăng nhập
               ElevatedButton(
                 onPressed: _handleLogin,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 15),
+                  backgroundColor: Colors.deepPurple,
+                  foregroundColor: Colors.white,
                 ),
-                child: const Text('ĐĂNG NHẬP', style: TextStyle(fontSize: 18)),
+                child: const Text(
+                  'ĐĂNG NHẬP',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
               ),
               const SizedBox(height: 20),
 
+              // Nút chuyển trang Đăng ký
               TextButton(
                 onPressed: () {
                   Navigator.of(context).push(
@@ -113,7 +160,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(color: Colors.blue),
                 ),
               ),
-              // Thêm một khoảng trống nhỏ ở cuối để đảm bảo cuộn được khi bàn phím nổi lên
               const SizedBox(height: 20),
             ],
           ),

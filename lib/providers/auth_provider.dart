@@ -9,29 +9,25 @@ class AuthProvider extends ChangeNotifier {
     role: UserRole.admin,
   );
 
-  // Danh sách chỉ dành cho User
   final List<User> _users = [];
 
   User? _currentUser;
 
   bool get isAuthenticated => _currentUser != null;
-  // Getter kiểm tra quyền Admin
+
   bool get isAdmin => _currentUser?.role == UserRole.admin;
 
-  // --- Chức năng ĐĂNG KÝ (Chỉ cho User thường) ---
+  // --- Chức năng ĐĂNG KÝ ---
   bool register(String email, String password) {
-    // Không cho đăng ký trùng email Admin
     if (email == _adminUser.email) return false;
 
     if (_users.any((user) => user.email == email)) {
-      return false; // Email đã tồn tại
+      return false;
     }
 
-    // Gán role mặc định là User thường
     final newUser = User(email: email, password: password, role: UserRole.user);
     _users.add(newUser);
-    _currentUser = newUser;
-    notifyListeners();
+
     return true;
   }
 
@@ -39,7 +35,7 @@ class AuthProvider extends ChangeNotifier {
   bool login(String email, String password) {
     // 1. Kiểm tra tài khoản Admin trước
     if (email == _adminUser.email && password == _adminUser.password) {
-      _currentUser = _adminUser; // Đăng nhập với quyền Admin
+      _currentUser = _adminUser;
       notifyListeners();
       return true;
     }
@@ -51,15 +47,14 @@ class AuthProvider extends ChangeNotifier {
     );
 
     if (user.email.isNotEmpty) {
-      _currentUser = user; // Đăng nhập với quyền User
+      _currentUser = user;
       notifyListeners();
       return true;
     }
 
-    return false; // Đăng nhập thất bại
+    return false;
   }
 
-  // ... Hàm logout() không đổi
   void logout() {
     _currentUser = null;
     notifyListeners();
