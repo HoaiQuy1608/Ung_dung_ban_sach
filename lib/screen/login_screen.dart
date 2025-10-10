@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart'; // Thư viện Google Fonts
 import 'package:ungdungbansach/providers/auth_provider.dart';
 import 'package:ungdungbansach/screen/register_screen.dart';
 
@@ -17,6 +18,10 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
 
   void _handleLogin() {
+    setState(() {
+      _errorMessage = null; // Xóa lỗi cũ
+    });
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     final success = authProvider.login(
@@ -28,6 +33,8 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _errorMessage = 'Email hoặc Mật khẩu không đúng. Vui lòng thử lại.';
       });
+    } else {
+      // Đăng nhập thành công, AuthWrapper tự chuyển hướng
     }
   }
 
@@ -41,79 +48,73 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'CỬA HÀNG SÁCH',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.deepPurple,
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
+      body: Center(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(30.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 50),
-
-              const Align(
-                alignment: Alignment.center,
-                child: Text(
-                  'ĐĂNG NHẬP',
-                  style: TextStyle(
-                    fontSize: 28, // Kích thước lớn
-                    fontWeight: FontWeight.w900,
-                    color: Colors.black87,
-                  ),
-                ),
+            children: <Widget>[
+              // Tiêu đề & Logo (Icon sách lớn)
+              Icon(
+                Icons.menu_book_rounded,
+                color: Colors.blue.shade700,
+                size: 80,
               ),
               const SizedBox(height: 10),
-
-              // Tiêu đề phụ
-              const Align(
-                alignment: Alignment.center,
-                child: Text(
-                  'Nhập thông tin để tiếp tục mua sắm!',
-                  style: TextStyle(fontSize: 16, color: Colors.blueGrey),
+              Text(
+                'BOOKSTORE',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.merriweather(
+                  fontSize: 34,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.blue.shade900,
                 ),
               ),
+              const SizedBox(height: 50),
 
-              const SizedBox(height: 50), // Khoảng cách tới ô nhập liệu
-              // Hiển thị lỗi
+              // Thông báo lỗi
               if (_errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20),
-                  child: Text(
-                    _errorMessage!,
-                    style: const TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.w600,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red.shade300),
                     ),
-                    textAlign: TextAlign.center,
+                    child: Text(
+                      _errorMessage!,
+                      style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
 
-              // TextField Email
+              // Trường Email
               TextField(
                 controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
-                ),
                 keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  hintText: 'Nhập email của bạn',
+                  prefixIcon: const Icon(Icons.email),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
               ),
               const SizedBox(height: 20),
 
-              // TextField Mật khẩu
+              // Trường Mật khẩu
               TextField(
                 controller: _passwordController,
                 decoration: InputDecoration(
                   labelText: 'Mật khẩu',
-                  border: const OutlineInputBorder(),
+                  hintText: 'Nhập mật khẩu',
                   prefixIcon: const Icon(Icons.lock),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _isPasswordVisible
@@ -129,22 +130,26 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 obscureText: !_isPasswordVisible,
               ),
-              const SizedBox(height: 50),
+              const SizedBox(height: 40),
 
               // Nút Đăng nhập
               ElevatedButton(
                 onPressed: _handleLogin,
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  backgroundColor: Colors.deepPurple,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  backgroundColor: Colors.deepPurple.shade600,
                   foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 5,
                 ),
-                child: const Text(
+                child: Text(
                   'ĐĂNG NHẬP',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.roboto(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
 
               // Nút chuyển trang Đăng ký
               TextButton(
@@ -155,12 +160,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   );
                 },
-                child: const Text(
+                child: Text(
                   'Chưa có tài khoản? Đăng ký ngay!',
-                  style: TextStyle(color: Colors.blue),
+                  style: GoogleFonts.inter(color: Colors.blue.shade700, fontSize: 16),
                 ),
               ),
-              const SizedBox(height: 20),
             ],
           ),
         ),

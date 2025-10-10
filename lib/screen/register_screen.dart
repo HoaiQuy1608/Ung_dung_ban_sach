@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:ungdungbansach/providers/auth_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -34,39 +35,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void _handleRegister() {
+    setState(() {
+      _errorMessage = null; // Xóa lỗi cũ
+    });
+    
     // 1. Kiểm tra Form Validation
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    // 2. Kiểm tra Mật khẩu xác nhận
-    if (_passwordController.text != _confirmPasswordController.text) {
-      setState(() {
-        _errorMessage = 'Mật khẩu xác nhận không khớp.';
-      });
-      return;
-    }
-
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
+    // 2. Thực hiện đăng ký
     final success = authProvider.register(
       _emailController.text.trim(),
-      _confirmPasswordController.text,
+      _passwordController.text,
     );
 
     if (success) {
-      // LUỒNG ĐÚNG: Đăng ký thành công -> Hiển thị SnackBar -> QUAY VỀ LoginScreen
+      // Đăng ký thành công -> quay lại màn hình đăng nhập
+      Navigator.of(context).pop(); 
+      // Hiển thị Toast Notification giả lập (vì không dùng thư viện Toast)
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đăng ký thành công! Vui lòng Đăng nhập.'),
-          duration: Duration(seconds: 3),
+        SnackBar(
+          content: Text(
+            'Đăng ký thành công! Vui lòng đăng nhập.',
+            style: GoogleFonts.roboto(),
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
         ),
       );
-      Navigator.of(context).pop();
     } else {
-      // Lỗi Email đã tồn tại
       setState(() {
-        _errorMessage = 'Đăng ký thất bại. Email này đã được sử dụng.';
+        _errorMessage =
+            'Email đã tồn tại hoặc không hợp lệ. Vui lòng chọn email khác.';
       });
     }
   }
@@ -82,57 +85,77 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Đăng Ký Tài Khoản')),
-      body: SingleChildScrollView(
-        child: Padding(
+      appBar: AppBar(
+        title: Text('ĐĂNG KÝ', style: GoogleFonts.merriweather()),
+        backgroundColor: Colors.blue.shade700,
+        foregroundColor: Colors.white,
+      ),
+      body: Center(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(30.0),
           child: Form(
             key: _formKey,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Hiển thị lỗi chung (ví dụ: email đã tồn tại)
+              children: <Widget>[
+                Text(
+                  'Tạo Tài Khoản Mới',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue.shade900,
+                  ),
+                ),
+                const SizedBox(height: 40),
+
+                // Thông báo lỗi
                 if (_errorMessage != null)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Text(
-                      _errorMessage!,
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.w600,
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.shade300),
                       ),
-                      textAlign: TextAlign.center,
+                      child: Text(
+                        _errorMessage!,
+                        style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
 
                 // Trường Email
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
-                  ),
                   keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: const Icon(Icons.email),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
                   validator: (value) {
-                    if (value == null ||
-                        value.isEmpty ||
-                        !value.contains('@')) {
-                      return 'Vui lòng nhập email hợp lệ.';
+                    if (value == null || value.isEmpty || !value.contains('@')) {
+                      return 'Vui lòng nhập Email hợp lệ.';
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 20),
 
-                // Trường Mật khẩu (Có Validation và Visibility)
+                // Trường Mật khẩu
                 TextFormField(
                   controller: _passwordController,
                   decoration: InputDecoration(
                     labelText: 'Mật khẩu',
-                    border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isPasswordVisible
@@ -151,13 +174,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Trường Xác nhận Mật khẩu (Có Visibility)
+                // Trường Xác nhận Mật khẩu
                 TextFormField(
                   controller: _confirmPasswordController,
                   decoration: InputDecoration(
                     labelText: 'Xác nhận Mật khẩu',
-                    border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock_reset),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isConfirmPasswordVisible
@@ -177,18 +202,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (value != _passwordController.text) {
                       return 'Mật khẩu xác nhận không khớp.';
                     }
-                    // Kiểm tra validation mạnh tương tự như trường mật khẩu chính
                     return _validatePassword(value ?? '');
                   },
                 ),
                 const SizedBox(height: 40),
 
+                // Nút Đăng ký
                 ElevatedButton(
                   onPressed: _handleRegister,
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    backgroundColor: Colors.green.shade600,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 5,
                   ),
-                  child: const Text('ĐĂNG KÝ', style: TextStyle(fontSize: 18)),
+                  child: Text(
+                    'ĐĂNG KÝ',
+                    style: GoogleFonts.roboto(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ),
                 const SizedBox(height: 20),
               ],

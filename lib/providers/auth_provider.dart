@@ -9,7 +9,10 @@ class AuthProvider extends ChangeNotifier {
     role: UserRole.admin,
   );
 
-  final List<User> _users = [];
+  // Khởi tạo danh sách người dùng với tài khoản mặc định
+  final List<User> _users = [
+    const User(email: 'user@book.com', password: 'password123', role: UserRole.user),
+  ];
 
   User? _currentUser;
 
@@ -19,14 +22,20 @@ class AuthProvider extends ChangeNotifier {
 
   // --- Chức năng ĐĂNG KÝ ---
   bool register(String email, String password) {
+    // Không cho phép đăng ký tài khoản trùng với admin
     if (email == _adminUser.email) return false;
 
+    // Kiểm tra email đã tồn tại chưa
     if (_users.any((user) => user.email == email)) {
       return false;
     }
 
     final newUser = User(email: email, password: password, role: UserRole.user);
     _users.add(newUser);
+
+    // Bổ sung: Nếu đăng ký thành công, tự động đăng nhập người dùng này
+    _currentUser = newUser;
+    notifyListeners();
 
     return true;
   }
@@ -41,22 +50,35 @@ class AuthProvider extends ChangeNotifier {
     }
 
     // 2. Nếu không phải Admin, tìm trong danh sách User thường
-    final user = _users.firstWhere(
+    // Sử dụng firstWhere với orElse để trả về null thay vì ném lỗi (an toàn hơn)
+    final user = _users.firstWhereOrNull(
       (user) => user.email == email && user.password == password,
-      orElse: () => const User(email: '', password: '', role: UserRole.user),
     );
-
-    if (user.email.isNotEmpty) {
+    
+    // Nếu tìm thấy, đăng nhập thành công
+    if (user != null) {
       _currentUser = user;
       notifyListeners();
       return true;
+    } else {
+      // Nếu không tìm thấy user, trả về false
+      return false;
     }
-
-    return false;
   }
 
+  // --- Chức năng ĐĂNG XUẤT ---
   void logout() {
     _currentUser = null;
     notifyListeners();
+  }
+}
+
+// Thêm extension để sử dụng firstWhereOrNull một cách an toàn
+extension IterableExtension<E> on Iterable<E> {
+  E? firstWhereOrNull(bool Function(E element) test) {
+    for (final element in this) {
+      if (test(element)) return element;
+    }
+    return null;
   }
 }
