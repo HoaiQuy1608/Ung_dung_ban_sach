@@ -13,9 +13,19 @@ class BookManagementScreen extends StatefulWidget {
 class _BookManagementScreenState extends State<BookManagementScreen> {
   final List<Map<String, dynamic>> _books = [];
 
+  // 👉 Danh sách thể loại giả (sau này bạn có thể lấy từ màn hình quản lý thể loại)
+  final List<String> _categories = [
+    'Tiểu thuyết',
+    'Kinh tế',
+    'Tâm lý',
+    'Khoa học',
+    'Thiếu nhi'
+  ];
+
   final _titleController = TextEditingController();
   final _priceController = TextEditingController();
   final _descriptionController = TextEditingController();
+  String? _selectedCategory;
   File? _pickedImage;
   bool _isEditing = false;
   int? _editingIndex;
@@ -47,6 +57,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
       _priceController.text = _books[index]['price'].toString();
       _descriptionController.text = _books[index]['description'];
       _pickedImage = _books[index]['image'];
+      _selectedCategory = _books[index]['category'];
       _isEditing = true;
       _editingIndex = index;
     } else {
@@ -54,6 +65,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
       _priceController.clear();
       _descriptionController.clear();
       _pickedImage = null;
+      _selectedCategory = null;
       _isEditing = false;
     }
 
@@ -119,7 +131,29 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                   decoration: const InputDecoration(labelText: 'Mô tả sách'),
                   maxLines: 3,
                 ),
+                const SizedBox(height: 15),
+
+                // 🧾 Dropdown chọn thể loại
+                DropdownButtonFormField<String>(
+                  value: _selectedCategory,
+                  decoration: const InputDecoration(
+                    labelText: 'Thể loại',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: _categories
+                      .map((category) => DropdownMenuItem<String>(
+                            value: category,
+                            child: Text(category),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedCategory = value;
+                    });
+                  },
+                ),
                 const SizedBox(height: 20),
+
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.redAccent,
@@ -129,7 +163,8 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                     if (_titleController.text.isEmpty ||
                         _priceController.text.isEmpty ||
                         _descriptionController.text.isEmpty ||
-                        _pickedImage == null) {
+                        _pickedImage == null ||
+                        _selectedCategory == null) {
                       _showToast('Vui lòng nhập đầy đủ thông tin', success: false);
                       return;
                     }
@@ -139,6 +174,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                       'price': double.tryParse(_priceController.text) ?? 0.0,
                       'description': _descriptionController.text,
                       'image': _pickedImage,
+                      'category': _selectedCategory,
                     };
 
                     setState(() {
@@ -229,6 +265,11 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                               Text(
                                 '${book['price']} VNĐ',
                                 style: const TextStyle(color: Colors.redAccent),
+                              ),
+                              Text(
+                                book['category'],
+                                style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+                                overflow: TextOverflow.ellipsis,
                               ),
                               Text(
                                 book['description'],
