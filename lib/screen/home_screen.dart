@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
-import '../providers/book_service.dart';
-import '../widgets/book_card.dart';
+import 'package:convex_bottom_bar/convex_bottom_bar.dart';
+
+import '/providers/auth_provider.dart';
+import '/providers/book_service.dart';
+import '/widgets/book_card.dart';
 import 'book_detail_screen.dart';
 import 'search_screen.dart';
 import 'cart_screen.dart';
 import 'notifications_screen.dart';
 import 'profile_screen.dart';
-import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 
-// Chuyển sang StatefulWidget để sử dụng initState
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -25,55 +25,55 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Giả định BookService có tồn tại và fetchBooks là hàm lấy dữ liệu
       Provider.of<BookService>(context, listen: false).fetchBooks();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Lấy ra AuthProvider để sử dụng hàm logout
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
-    // Lắng nghe trạng thái sách
     final bookService = Provider.of<BookService>(context);
 
+    // List các trang ứng với Bottom Bar
     final List<Widget> pages = [
       // Home grid
-      Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: bookService.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : LayoutBuilder(
-                builder: (context, constraints) {
-                  final crossAxisCount = constraints.maxWidth > 900
-                      ? 6
-                      : constraints.maxWidth > 600
-                      ? 4
-                      : 2;
-                  return GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 0.6,
+      LayoutBuilder(
+        builder: (context, constraints) {
+          // Logic responsive cho số cột
+          final crossAxisCount = constraints.maxWidth > 900
+              ? 6
+              : constraints.maxWidth > 600
+              ? 4
+              : 2;
+
+          // Tỉ lệ khung hình an toàn nhất cho GridView 2 cột (0.58-0.60)
+          const double safeAspectRatio = 0.55;
+
+          return GridView.builder(
+            // Áp dụng padding trực tiếp và chỉ sử dụng một cuộn (an toàn)
+            padding: const EdgeInsets.all(12.0),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: safeAspectRatio,
+            ),
+            itemCount: bookService.books.length,
+            itemBuilder: (context, index) {
+              final book = bookService.books[index];
+              return BookCard(
+                book: book,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => BookDetailScreen(book: book),
                     ),
-                    itemCount: bookService.books.length,
-                    itemBuilder: (context, index) {
-                      final book = bookService.books[index];
-                      return BookCard(
-                        book: book,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => BookDetailScreen(book: book),
-                            ),
-                          );
-                        },
-                      );
-                    },
                   );
                 },
-              ),
+              );
+            },
+          );
+        },
       ),
       const SearchScreen(),
       const CartScreen(),
@@ -84,15 +84,15 @@ class _HomeScreenState extends State<HomeScreen> {
     String titleForIndex(int i) {
       switch (i) {
         case 0:
-          return 'Home';
+          return 'Trang chủ';
         case 1:
-          return 'Search Books';
+          return 'Tìm kiếm';
         case 2:
-          return 'My Cart';
+          return 'Giỏ hàng';
         case 3:
-          return 'Notifications';
+          return 'Thông báo';
         case 4:
-          return 'Profile';
+          return 'Tài khoản';
         default:
           return 'Bookify';
       }
@@ -101,15 +101,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(titleForIndex(_currentIndex)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => authProvider.logout(),
-            tooltip: 'Đăng xuất',
-          ),
-        ],
+        actions: const [],
       ),
-      body: IndexedStack(index: _currentIndex, children: pages),
+      // Bọc IndexedStack bằng SafeArea để tránh tràn viền hệ thống
+      body: SafeArea(
+        child: IndexedStack(index: _currentIndex, children: pages),
+      ),
       bottomNavigationBar: ConvexAppBar(
         initialActiveIndex: _currentIndex,
         backgroundColor: Theme.of(context).colorScheme.primary,

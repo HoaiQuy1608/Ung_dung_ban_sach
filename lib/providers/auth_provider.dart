@@ -2,17 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:ungdungbansach/models/user.dart';
 
 class AuthProvider extends ChangeNotifier {
-  // Tài khoản Admin
   static const User _adminUser = User(
     email: 'admin@book.com',
     password: 'admin123',
     role: UserRole.admin,
   );
 
-  // Khởi tạo danh sách người dùng với tài khoản mặc định
-  final List<User> _users = [
-    const User(email: 'user@book.com', password: 'password123', role: UserRole.user),
-  ];
+  final List<User> _users = [];
 
   User? _currentUser;
 
@@ -20,12 +16,11 @@ class AuthProvider extends ChangeNotifier {
 
   bool get isAdmin => _currentUser?.role == UserRole.admin;
 
-  // --- Chức năng ĐĂNG KÝ ---
-  bool register(String email, String password) {
-    // Không cho phép đăng ký tài khoản trùng với admin
-    if (email == _adminUser.email) return false;
+  User? get currentUser => _currentUser;
 
-    // Kiểm tra email đã tồn tại chưa
+  // --- Chức năng ĐĂNG KÝ (Không đổi) ---
+  bool register(String email, String password) {
+    if (email == _adminUser.email) return false;
     if (_users.any((user) => user.email == email)) {
       return false;
     }
@@ -33,14 +28,10 @@ class AuthProvider extends ChangeNotifier {
     final newUser = User(email: email, password: password, role: UserRole.user);
     _users.add(newUser);
 
-    // Bổ sung: Nếu đăng ký thành công, tự động đăng nhập người dùng này
-    _currentUser = newUser;
-    notifyListeners();
-
     return true;
   }
 
-  // --- Chức năng ĐĂNG NHẬP ---
+  // --- Chức năng ĐĂNG NHẬP (Không đổi) ---
   bool login(String email, String password) {
     // 1. Kiểm tra tài khoản Admin trước
     if (email == _adminUser.email && password == _adminUser.password) {
@@ -49,36 +40,28 @@ class AuthProvider extends ChangeNotifier {
       return true;
     }
 
-    // 2. Nếu không phải Admin, tìm trong danh sách User thường
-    // Sử dụng firstWhere với orElse để trả về null thay vì ném lỗi (an toàn hơn)
-    final user = _users.firstWhereOrNull(
-      (user) => user.email == email && user.password == password,
-    );
-    
-    // Nếu tìm thấy, đăng nhập thành công
-    if (user != null) {
-      _currentUser = user;
+    // 2. Tìm trong danh sách User thường bằng vòng lặp FOR
+    User? foundUser;
+    for (final user in _users) {
+      if (user.email == email && user.password == password) {
+        foundUser = user;
+        break;
+      }
+    }
+
+    // 3. Đăng nhập nếu tìm thấy
+    if (foundUser != null) {
+      _currentUser = foundUser;
       notifyListeners();
       return true;
-    } else {
-      // Nếu không tìm thấy user, trả về false
-      return false;
     }
+
+    return false; // Đăng nhập thất bại
   }
 
-  // --- Chức năng ĐĂNG XUẤT ---
+  // --- Chức năng ĐĂNG XUẤT (Không đổi) ---
   void logout() {
     _currentUser = null;
     notifyListeners();
-  }
-}
-
-// Thêm extension để sử dụng firstWhereOrNull một cách an toàn
-extension IterableExtension<E> on Iterable<E> {
-  E? firstWhereOrNull(bool Function(E element) test) {
-    for (final element in this) {
-      if (test(element)) return element;
-    }
-    return null;
   }
 }

@@ -1,4 +1,4 @@
-// lib/main.dart
+// lib/main.dart (Đã sửa để LUÔN khởi động ở chế độ sáng)
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -6,11 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 import 'package:ungdungbansach/providers/auth_provider.dart';
-import 'package:ungdungbansach/screen/admin/admin_book.dart';
-import 'package:ungdungbansach/providers/book_service.dart'; // THÊM IMPORT BOOK SERVICE
+import 'package:ungdungbansach/providers/book_service.dart';
 import 'package:ungdungbansach/screen/home_screen.dart';
-import 'package:ungdungbansach/screen/login_screen.dart';
-import 'package:ungdungbansach/screen/admin/admin_dashboard_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -22,52 +19,29 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      // CẬP NHẬT: Đăng ký cả AuthProvider và BookService
+      // Đăng ký AuthProvider và BookService
       providers: [
         ChangeNotifierProvider(create: (context) => AuthProvider()),
-        ChangeNotifierProvider(
-          create: (context) => BookService(),
-        ), // ĐĂNG KÝ BOOK SERVICE
+        ChangeNotifierProvider(create: (context) => BookService()),
       ],
       child: MaterialApp(
         title: 'Bookify',
         debugShowCheckedModeBanner: false,
+        // SỬA ĐỔI: Chỉ gọi theme sáng
         theme: _buildTheme(Brightness.light),
-        darkTheme: _buildTheme(Brightness.dark),
-        themeMode: ThemeMode.system,
+
+        // darkTheme và themeMode đã được loại bỏ/bỏ qua
         builder: EasyLoading.init(),
-        home: const AuthWrapper(),
+        home: const HomeScreen(),
       ),
     );
   }
 }
 
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    // AuthWrapper lắng nghe thay đổi từ AuthProvider
-    final authProvider = Provider.of<AuthProvider>(context);
-
-    if (authProvider.isAuthenticated) {
-      if (authProvider.isAdmin) {
-        return const AdminDashboardScreen();
-      } else {
-        // Sau khi người dùng thường đăng nhập thành công, chuyển đến HomeScreen
-        return const HomeScreen();
-      }
-    } else {
-      // Nếu chưa đăng nhập, chuyển đến màn hình Login
-      return const LoginScreen();
-    }
-  }
-}
-
-// App theme for Bookify using Material 3, Nunito, and brand colors
+// Hàm theme không cần thay đổi logic bên trong
 ThemeData _buildTheme(Brightness brightness) {
-  final Color seed = const Color(0xFF6C63FF); // Primary
-  final Color accent = const Color(0xFFFFA500); // Accent
+  final Color seed = const Color(0xFF6C63FF);
+  final Color accent = const Color(0xFFFFA500);
   final ColorScheme baseScheme = ColorScheme.fromSeed(
     seedColor: seed,
     brightness: brightness,
@@ -84,9 +58,7 @@ ThemeData _buildTheme(Brightness brightness) {
       backgroundColor: baseScheme.primary,
       foregroundColor: baseScheme.onPrimary,
     ),
-    scaffoldBackgroundColor: brightness == Brightness.dark
-        ? const Color(0xFF111315)
-        : Colors.white,
+    scaffoldBackgroundColor: Colors.white, // ĐẢM BẢO MÀU TRẮNG
     snackBarTheme: SnackBarThemeData(
       backgroundColor: baseScheme.primary,
       contentTextStyle: textTheme.bodyMedium?.copyWith(

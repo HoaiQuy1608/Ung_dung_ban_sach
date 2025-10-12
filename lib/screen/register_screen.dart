@@ -20,7 +20,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
-  // Hàm kiểm tra tính hợp lệ của Mật khẩu
   String? _validatePassword(String password) {
     if (password.length < 6) {
       return 'Mật khẩu phải từ 6 ký tự trở lên.';
@@ -36,26 +35,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _handleRegister() {
     setState(() {
-      _errorMessage = null; // Xóa lỗi cũ
+      _errorMessage = null;
     });
-    
-    // 1. Kiểm tra Form Validation
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    // 2. Thực hiện đăng ký
     final success = authProvider.register(
       _emailController.text.trim(),
       _passwordController.text,
     );
 
     if (success) {
-      // Đăng ký thành công -> quay lại màn hình đăng nhập
-      Navigator.of(context).pop(); 
-      // Hiển thị Toast Notification giả lập (vì không dùng thư viện Toast)
+      Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -84,12 +79,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('ĐĂNG KÝ', style: GoogleFonts.merriweather()),
-        backgroundColor: Colors.blue.shade700,
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary, // Dùng màu primary
+        foregroundColor: colorScheme.onPrimary, // Chữ trắng
       ),
+      backgroundColor: colorScheme.surface, // Nền sáng
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(30.0),
@@ -104,7 +102,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   style: GoogleFonts.playfairDisplay(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade900,
+                    color: colorScheme.primary, // Dùng màu primary
                   ),
                 ),
                 const SizedBox(height: 40),
@@ -117,12 +115,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Colors.red.shade100,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(
+                          12,
+                        ), // Bo góc mềm mại hơn
                         border: Border.all(color: Colors.red.shade300),
                       ),
                       child: Text(
                         _errorMessage!,
-                        style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -133,13 +136,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: 'Email',
-                    prefixIcon: const Icon(Icons.email),
+                    prefixIcon: Icon(Icons.email, color: colorScheme.secondary),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: colorScheme.primary,
+                        width: 2,
+                      ),
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty || !value.contains('@')) {
+                    if (value == null ||
+                        value.isEmpty ||
+                        !value.contains('@')) {
                       return 'Vui lòng nhập Email hợp lệ.';
                     }
                     return null;
@@ -152,15 +164,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _passwordController,
                   decoration: InputDecoration(
                     labelText: 'Mật khẩu',
-                    prefixIcon: const Icon(Icons.lock),
+                    prefixIcon: Icon(Icons.lock, color: colorScheme.secondary),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: colorScheme.primary,
+                        width: 2,
+                      ),
                     ),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isPasswordVisible
                             ? Icons.visibility
                             : Icons.visibility_off,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                       onPressed: () {
                         setState(() {
@@ -179,15 +199,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _confirmPasswordController,
                   decoration: InputDecoration(
                     labelText: 'Xác nhận Mật khẩu',
-                    prefixIcon: const Icon(Icons.lock_reset),
+                    prefixIcon: Icon(
+                      Icons.lock_reset,
+                      color: colorScheme.secondary,
+                    ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: colorScheme.primary,
+                        width: 2,
+                      ),
                     ),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isConfirmPasswordVisible
                             ? Icons.visibility
                             : Icons.visibility_off,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                       onPressed: () {
                         setState(() {
@@ -212,8 +243,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onPressed: _handleRegister,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 18),
-                    backgroundColor: Colors.green.shade600,
-                    foregroundColor: Colors.white,
+                    backgroundColor: colorScheme.tertiary, // Dùng màu tertiary
+                    foregroundColor: colorScheme.onTertiary, // Chữ trắng
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -221,7 +252,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   child: Text(
                     'ĐĂNG KÝ',
-                    style: GoogleFonts.roboto(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.roboto(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
