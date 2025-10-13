@@ -10,7 +10,6 @@ class CartScreen extends StatelessWidget {
 
   // Hộp thoại xác nhận đặt hàng
   Future<bool> _confirmCheckout(BuildContext context, double total) async {
-    // Lấy formatPrice từ provider (để tránh lỗi nếu code ở đây)
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     final String formattedTotal = cartProvider.formatPrice(total);
 
@@ -37,6 +36,44 @@ class CartScreen extends StatelessWidget {
         false;
   }
 
+  void _handleCheckout(BuildContext context, CartProvider cartProvider) async {
+    final total = cartProvider.totalPrice;
+    final cartItems = cartProvider.items;
+
+    if (cartItems.isEmpty) return;
+
+    // Lấy AuthProvider để kiểm tra trạng thái
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    if (!authProvider.isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng đăng nhập để tiến hành thanh toán.'),
+          backgroundColor: Colors.deepPurple,
+        ),
+      );
+      return;
+    }
+
+    final confirmed = await _confirmCheckout(context, total);
+
+    if (confirmed) {
+      final String formattedTotal = cartProvider.formatPrice(total);
+      cartProvider.placeOrder();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Đơn hàng $formattedTotal đã được đặt thành công!',
+            style: GoogleFonts.roboto(),
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<CartProvider>(
@@ -44,44 +81,6 @@ class CartScreen extends StatelessWidget {
         final colorScheme = Theme.of(context).colorScheme;
         final cartItems = cartProvider.items;
         final total = cartProvider.totalPrice;
-
-        // ĐÃ XÓA KHAI BÁO 'formatter' (biến không dùng)
-
-        // Hàm xử lý checkout
-        void handleCheckout() async {
-          if (cartItems.isEmpty) return;
-
-          final authProvider = Provider.of<AuthProvider>(
-            context,
-            listen: false,
-          );
-          if (!authProvider.isAuthenticated) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Vui lòng đăng nhập để tiến hành thanh toán.'),
-                backgroundColor: Colors.deepPurple,
-              ),
-            );
-            return;
-          }
-
-          final confirmed = await _confirmCheckout(context, total);
-          if (confirmed) {
-            final String formattedTotal = cartProvider.formatPrice(total);
-            cartProvider.placeOrder();
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Đơn hàng $formattedTotal đã được đặt thành công!',
-                  style: GoogleFonts.roboto(),
-                ),
-                backgroundColor: Colors.green,
-                duration: const Duration(seconds: 3),
-              ),
-            );
-          }
-        }
 
         return Scaffold(
           appBar: AppBar(
@@ -158,7 +157,6 @@ class CartScreen extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            // SỬ DỤNG HÀM FORMAT TỪ PROVIDER
                             cartProvider.formatPrice(total),
                             style: GoogleFonts.poppins(
                               fontSize: 20,
@@ -170,7 +168,10 @@ class CartScreen extends StatelessWidget {
                       ),
                     ),
                     FilledButton.icon(
-                      onPressed: cartItems.isEmpty ? null : handleCheckout,
+                      // Gọi hàm đã sửa
+                      onPressed: cartItems.isEmpty
+                          ? null
+                          : () => _handleCheckout(context, cartProvider),
                       icon: const Icon(Icons.payment),
                       label: const Text('Thanh toán'),
                     ),
