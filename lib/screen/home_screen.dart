@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 
-import '/providers/auth_provider.dart';
 import '/providers/book_service.dart';
 import '/widgets/book_card.dart';
 import 'book_detail_screen.dart';

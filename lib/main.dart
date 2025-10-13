@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 
+import 'package:ungdungbansach/providers/cart_provider.dart';
 import 'package:ungdungbansach/providers/auth_provider.dart';
 import 'package:ungdungbansach/providers/book_service.dart';
 import 'package:ungdungbansach/screen/home_screen.dart';
@@ -23,15 +24,14 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (context) => AuthProvider()),
         ChangeNotifierProvider(create: (context) => BookService()),
+        ChangeNotifierProvider(create: (context) => CartProvider()),
       ],
       child: MaterialApp(
         title: 'Bookify',
         debugShowCheckedModeBanner: false,
-        // SỬA ĐỔI: Chỉ gọi theme sáng
         theme: _buildTheme(Brightness.light),
-
-        // darkTheme và themeMode đã được loại bỏ/bỏ qua
         builder: EasyLoading.init(),
+
         home: const HomeScreen(),
       ),
     );

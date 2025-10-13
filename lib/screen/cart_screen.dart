@@ -1,123 +1,186 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ungdungbansach/widgets/cart_item_tile.dart';
-import 'package:ungdungbansach/models/book_model.dart';
+import 'package:ungdungbansach/providers/cart_provider.dart';
+import 'package:ungdungbansach/providers/auth_provider.dart';
 
-class CartScreen extends StatefulWidget {
+class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
-  @override
-  State<CartScreen> createState() => _CartScreenState();
-}
+  // Hộp thoại xác nhận đặt hàng
+  Future<bool> _confirmCheckout(BuildContext context, double total) async {
+    // Lấy formatPrice từ provider (để tránh lỗi nếu code ở đây)
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    final String formattedTotal = cartProvider.formatPrice(total);
 
-class _CartScreenState extends State<CartScreen> {
-  // Mock cart items
-  final List<_CartLine> _lines = [
-    _CartLine(
-      book: Book(
-        id: 'c1',
-        title: 'The Pragmatic Programmer',
-        author: 'Andrew Hunt',
-        imageUrl:
-            'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=300&h=400&fit=crop',
-        price: 420000,
-        description: 'Journey to mastery.',
-        rating: 4.7,
-      ),
-      qty: 1,
-    ),
-    _CartLine(
-      book: Book(
-        id: 'c2',
-        title: 'Refactoring',
-        author: 'Martin Fowler',
-        imageUrl:
-            'https://images.unsplash.com/photo-1513475382585-d06e58bcb0ea?q=80&w=300&h=400&fit=crop',
-        price: 380000,
-        description: 'Improving the design of existing code.',
-        rating: 4.8,
-      ),
-      qty: 2,
-    ),
-  ];
-
-  double get _total => _lines.fold(0, (sum, l) => sum + l.book.price * l.qty);
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Xác nhận Đặt hàng'),
+            content: Text(
+              'Bạn có chắc chắn muốn đặt đơn hàng trị giá $formattedTotal không?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Hủy'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                child: const Text('Đặt hàng'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      appBar: AppBar(title: const Text('My Cart')),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.all(12),
-              itemCount: _lines.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final line = _lines[index];
-                return CartItemTile(
-                  book: line.book,
-                  quantity: line.qty,
-                  onQuantityChanged: (q) =>
-                      setState(() => _lines[index] = line.copyWith(qty: q)),
-                  onDelete: () => setState(() => _lines.removeAt(index)),
-                );
-              },
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 12,
-                  offset: const Offset(0, -4),
+    return Consumer<CartProvider>(
+      builder: (context, cartProvider, child) {
+        final colorScheme = Theme.of(context).colorScheme;
+        final cartItems = cartProvider.items;
+        final total = cartProvider.totalPrice;
+
+        // ĐÃ XÓA KHAI BÁO 'formatter' (biến không dùng)
+
+        // Hàm xử lý checkout
+        void handleCheckout() async {
+          if (cartItems.isEmpty) return;
+
+          final authProvider = Provider.of<AuthProvider>(
+            context,
+            listen: false,
+          );
+          if (!authProvider.isAuthenticated) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Vui lòng đăng nhập để tiến hành thanh toán.'),
+                backgroundColor: Colors.deepPurple,
+              ),
+            );
+            return;
+          }
+
+          final confirmed = await _confirmCheckout(context, total);
+          if (confirmed) {
+            final String formattedTotal = cartProvider.formatPrice(total);
+            cartProvider.placeOrder();
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Đơn hàng $formattedTotal đã được đặt thành công!',
+                  style: GoogleFonts.roboto(),
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Total Price',
-                        style: GoogleFonts.nunito(fontWeight: FontWeight.w600),
-                      ),
-                      Text(
-                        '${_total.toStringAsFixed(0)} ₫',
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: colorScheme.primary,
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text('Giỏ Hàng (${cartItems.length} sản phẩm)'),
+          ),
+          body: Column(
+            children: [
+              // 1. Danh sách sản phẩm
+              Expanded(
+                child: cartItems.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.shopping_cart_outlined,
+                              size: 80,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Giỏ hàng của bạn đang trống.',
+                              style: GoogleFonts.nunito(fontSize: 18),
+                            ),
+                          ],
                         ),
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(12),
+                        itemCount: cartItems.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final line = cartItems[index];
+                          return CartItemTile(
+                            book: line.book,
+                            quantity: line.quantity,
+                            onQuantityChanged: (q) {
+                              if (q > line.quantity) {
+                                cartProvider.increaseQuantity(line.book.id);
+                              } else if (q < line.quantity) {
+                                cartProvider.decreaseQuantity(line.book.id);
+                              }
+                            },
+                            onDelete: () =>
+                                cartProvider.removeItem(line.book.id),
+                          );
+                        },
                       ),
-                    ],
-                  ),
+              ),
+
+              // 2. Khu vực Tổng tiền và Thanh toán
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 12,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
                 ),
-                FilledButton.icon(
-                  onPressed: _lines.isEmpty ? null : () {},
-                  icon: const Icon(Icons.payment),
-                  label: const Text('Checkout'),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Tổng tiền',
+                            style: GoogleFonts.nunito(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            // SỬ DỤNG HÀM FORMAT TỪ PROVIDER
+                            cartProvider.formatPrice(total),
+                            style: GoogleFonts.poppins(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    FilledButton.icon(
+                      onPressed: cartItems.isEmpty ? null : handleCheckout,
+                      icon: const Icon(Icons.payment),
+                      label: const Text('Thanh toán'),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
-}
-
-class _CartLine {
-  final Book book;
-  final int qty;
-  _CartLine({required this.book, required this.qty});
-  _CartLine copyWith({Book? book, int? qty}) =>
-      _CartLine(book: book ?? this.book, qty: qty ?? this.qty);
 }

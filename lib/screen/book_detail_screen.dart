@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // BẮT BUỘC
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../providers/auth_provider.dart';
+import '../providers/cart_provider.dart'; // IMPORT CART PROVIDER
 import 'package:ungdungbansach/models/book_model.dart';
-import 'package:url_launcher/url_launcher.dart'; // Thư viện URL Launcher
 
 class BookDetailScreen extends StatelessWidget {
   final Book book;
@@ -15,8 +18,33 @@ class BookDetailScreen extends StatelessWidget {
     }
   }
 
+  void _addToCart(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (!authProvider.isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.'),
+          backgroundColor: Colors.deepPurple,
+        ),
+      );
+      return;
+    }
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    cartProvider.addItem(book);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Đã thêm "${book.title}" vào giỏ hàng.'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Lấy provider để sử dụng formatPrice (nếu cần)
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    final formattedPrice = cartProvider.formatPrice(book.price);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(book.title, style: GoogleFonts.merriweather()),
@@ -38,11 +66,12 @@ class BookDetailScreen extends StatelessWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
-                      book.imageUrl.replaceAll('w=150', 'w=300').replaceAll('h=200', 'h=400'),
+                      book.imageUrl
+                          .replaceAll('w=150', 'w=300')
+                          .replaceAll('h=200', 'h=400'),
                       height: 350,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          Container(
+                      errorBuilder: (context, error, stackTrace) => Container(
                         height: 350,
                         width: 250,
                         color: Colors.grey.shade300,
@@ -73,7 +102,10 @@ class BookDetailScreen extends StatelessWidget {
                     children: [
                       const Icon(Icons.star, color: Colors.amber, size: 20),
                       const SizedBox(width: 5),
-                      Text('${book.rating} / 5.0', style: const TextStyle(fontSize: 16)),
+                      Text(
+                        '${book.rating.toStringAsFixed(1)} / 5.0',
+                        style: const TextStyle(fontSize: 16),
+                      ),
                       const Spacer(),
                       TextButton.icon(
                         icon: const Icon(Icons.person, size: 18),
@@ -85,7 +117,9 @@ class BookDetailScreen extends StatelessWidget {
                             decoration: TextDecoration.underline,
                           ),
                         ),
-                        onPressed: () => _launchUrl('https://google.com/search?q=${book.author}'), // Mở liên kết tìm kiếm tác giả
+                        onPressed: () => _launchUrl(
+                          'https://google.com/search?q=${book.author}',
+                        ),
                       ),
                     ],
                   ),
@@ -93,10 +127,12 @@ class BookDetailScreen extends StatelessWidget {
                   Text(
                     'GIÁ BÁN:',
                     style: GoogleFonts.openSans(
-                        fontSize: 16, fontWeight: FontWeight.bold),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
-                    '${book.price.toStringAsFixed(0)} VNĐ',
+                    formattedPrice, // SỬ DỤNG GIÁ ĐÃ FORMAT
                     style: GoogleFonts.inter(
                       fontSize: 34,
                       fontWeight: FontWeight.w900,
@@ -120,12 +156,15 @@ class BookDetailScreen extends StatelessWidget {
                     style: GoogleFonts.roboto(fontSize: 16, height: 1.5),
                     textAlign: TextAlign.justify,
                   ),
+                  const SizedBox(height: 100), // Khoảng trống cuối trang
                 ],
               ),
             ),
           ],
         ),
       ),
+
+      // BOTTOM BAR CHO NÚT THÊM VÀO GIỎ HÀNG
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
@@ -139,16 +178,17 @@ class BookDetailScreen extends StatelessWidget {
           ],
         ),
         child: ElevatedButton.icon(
-          onPressed: () {
-            // Logic thêm vào giỏ hàng
-          },
+          onPressed: () => _addToCart(context), // <--- KẾT NỐI HÀM THÊM VÀO GIỎ
           icon: const Icon(Icons.shopping_cart, size: 24),
           label: const Text('THÊM VÀO GIỎ HÀNG'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.deepOrange,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 15),
-            textStyle: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold),
+            textStyle: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ),
