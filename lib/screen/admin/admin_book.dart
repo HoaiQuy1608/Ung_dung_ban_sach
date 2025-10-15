@@ -70,12 +70,14 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
     }
 
     showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
+  context: context,
+  isScrollControlled: true,
+  shape: const RoundedRectangleBorder(
+    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  ),
+  builder: (context) {
+    return StatefulBuilder(
+      builder: (context, setModalState) {  // ✅ thêm setModalState
         return Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -93,7 +95,14 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                 ),
                 const SizedBox(height: 15),
                 GestureDetector(
-                  onTap: _pickImage,
+                  onTap: () async {
+                    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+                    if (pickedFile != null) {
+                      setModalState(() {
+                        _pickedImage = File(pickedFile.path);
+                      });
+                    }
+                  },
                   child: _pickedImage == null
                       ? Container(
                           height: 150,
@@ -132,8 +141,6 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                   maxLines: 3,
                 ),
                 const SizedBox(height: 15),
-
-                // 🧾 Dropdown chọn thể loại
                 DropdownButtonFormField<String>(
                   value: _selectedCategory,
                   decoration: const InputDecoration(
@@ -147,13 +154,12 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                           ))
                       .toList(),
                   onChanged: (value) {
-                    setState(() {
+                    setModalState(() {
                       _selectedCategory = value;
                     });
                   },
                 ),
                 const SizedBox(height: 20),
-
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.redAccent,
@@ -198,6 +204,9 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
         );
       },
     );
+  },
+);
+
   }
 
   void _deleteBook(int index) {
