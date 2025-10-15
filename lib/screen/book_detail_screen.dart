@@ -1,10 +1,15 @@
+// lib/screens/book_detail_screen.dart
+
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // BẮT BUỘC
+import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../providers/auth_provider.dart';
-import '../providers/cart_provider.dart'; // IMPORT CART PROVIDER
+import '../providers/cart_provider.dart';
 import 'package:ungdungbansach/models/book_model.dart';
+import 'package:ungdungbansach/models/cart_model.dart';
+import 'checkout_screen.dart';
 
 class BookDetailScreen extends StatelessWidget {
   final Book book;
@@ -18,8 +23,12 @@ class BookDetailScreen extends StatelessWidget {
     }
   }
 
-  void _addToCart(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  // Hàm xử lý Thêm vào giỏ hàng
+  void _addToCart(
+    BuildContext context,
+    AuthProvider authProvider,
+    CartProvider cartProvider,
+  ) {
     if (!authProvider.isAuthenticated) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -29,8 +38,9 @@ class BookDetailScreen extends StatelessWidget {
       );
       return;
     }
-    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+
     cartProvider.addItem(book);
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Đã thêm "${book.title}" vào giỏ hàng.'),
@@ -39,10 +49,38 @@ class BookDetailScreen extends StatelessWidget {
     );
   }
 
+  // HÀM XỬ LÝ MUA NGAY (QUICK CHECKOUT)
+  void _buyNow(BuildContext context, AuthProvider authProvider) {
+    if (!authProvider.isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng đăng nhập để tiến hành mua hàng.'),
+          backgroundColor: Colors.deepPurple,
+        ),
+      );
+      return;
+    }
+
+    // Tạo CartItem tạm thời cho luồng Buy Now (số lượng 1)
+    final tempItem = CartItem(book: book, quantity: 1);
+
+    // Chuyển thẳng đến màn hình Checkout
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CheckoutScreen(
+          itemsToBuy: [tempItem],
+          source: CheckoutSource.quickBuy,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Lấy provider để sử dụng formatPrice (nếu cần)
+    // Lấy Providers
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
+
     final formattedPrice = cartProvider.formatPrice(book.price);
 
     return Scaffold(
@@ -55,14 +93,14 @@ class BookDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Phần Header và Ảnh
+            // Phần Header và Ảnh (giữ nguyên)
             Container(
               padding: const EdgeInsets.all(20),
               color: Colors.teal.shade50,
               width: double.infinity,
               child: Center(
                 child: Hero(
-                  tag: 'book-${book.id}', // Hero animation
+                  tag: 'book-${book.id}',
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
@@ -83,7 +121,7 @@ class BookDetailScreen extends StatelessWidget {
               ),
             ),
 
-            // Phần Chi tiết
+            // Phần Chi tiết (giữ nguyên)
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
@@ -98,6 +136,7 @@ class BookDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
+                  // ... (Row Rating và Tác giả) ...
                   Row(
                     children: [
                       const Icon(Icons.star, color: Colors.amber, size: 20),
@@ -132,7 +171,7 @@ class BookDetailScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    formattedPrice, // SỬ DỤNG GIÁ ĐÃ FORMAT
+                    formattedPrice,
                     style: GoogleFonts.inter(
                       fontSize: 34,
                       fontWeight: FontWeight.w900,
@@ -164,7 +203,7 @@ class BookDetailScreen extends StatelessWidget {
         ),
       ),
 
-      // BOTTOM BAR CHO NÚT THÊM VÀO GIỎ HÀNG
+      // BOTTOM NAVIGATION BAR (2 NÚT CHỨC NĂNG)
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
@@ -177,19 +216,54 @@ class BookDetailScreen extends StatelessWidget {
             ),
           ],
         ),
-        child: ElevatedButton.icon(
-          onPressed: () => _addToCart(context), // <--- KẾT NỐI HÀM THÊM VÀO GIỎ
-          icon: const Icon(Icons.shopping_cart, size: 24),
-          label: const Text('THÊM VÀO GIỎ HÀNG'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.deepOrange,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            textStyle: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+        child: Row(
+          children: [
+            // Nút 1: Thêm vào Giỏ hàng
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () =>
+                    _addToCart(context, authProvider, cartProvider),
+                icon: const Icon(
+                  Icons.shopping_cart,
+                  size: 24,
+                  color: Colors.deepOrange,
+                ),
+                label: const Text(
+                  'Thêm vào giỏ',
+                  style: TextStyle(color: Colors.deepOrange),
+                ),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  side: const BorderSide(color: Colors.deepOrange),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
             ),
-          ),
+            const SizedBox(width: 10),
+            // Nút 2: MUA NGAY (Quick Checkout)
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () =>
+                    _buyNow(context, authProvider), // <--- KẾT NỐI MUA NGAY
+                icon: const Icon(Icons.payment, size: 24, color: Colors.white),
+                label: const Text('MUA NGAY'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  textStyle: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

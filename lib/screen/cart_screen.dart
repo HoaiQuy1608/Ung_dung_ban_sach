@@ -1,14 +1,18 @@
+// lib/screens/cart_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ungdungbansach/widgets/cart_item_tile.dart';
 import 'package:ungdungbansach/providers/cart_provider.dart';
 import 'package:ungdungbansach/providers/auth_provider.dart';
+import 'checkout_screen.dart';
+import '../models/cart_model.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
-  // Hộp thoại xác nhận đặt hàng
+  // Hộp thoại xác nhận đặt hàng (UX)
   Future<bool> _confirmCheckout(BuildContext context, double total) async {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     final String formattedTotal = cartProvider.formatPrice(total);
@@ -36,15 +40,15 @@ class CartScreen extends StatelessWidget {
         false;
   }
 
+  // HÀM XỬ LÝ CHECKOUT CHÍNH (ĐIỀU HƯỚNG SANG CHECKOUT SCREEN)
   void _handleCheckout(BuildContext context, CartProvider cartProvider) async {
     final total = cartProvider.totalPrice;
     final cartItems = cartProvider.items;
 
     if (cartItems.isEmpty) return;
 
-    // Lấy AuthProvider để kiểm tra trạng thái
+    // 1. Kiểm tra Đăng nhập
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
     if (!authProvider.isAuthenticated) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -55,20 +59,16 @@ class CartScreen extends StatelessWidget {
       return;
     }
 
+    // 2. Xác nhận và chuyển sang màn hình Checkout
     final confirmed = await _confirmCheckout(context, total);
 
     if (confirmed) {
-      final String formattedTotal = cartProvider.formatPrice(total);
-      cartProvider.placeOrder();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Đơn hàng $formattedTotal đã được đặt thành công!',
-            style: GoogleFonts.roboto(),
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => CheckoutScreen(
+            itemsToBuy: cartItems, // TRUYỀN TOÀN BỘ GIỎ HÀNG
+            source: CheckoutSource.cart,
           ),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 3),
         ),
       );
     }
@@ -168,7 +168,6 @@ class CartScreen extends StatelessWidget {
                       ),
                     ),
                     FilledButton.icon(
-                      // Gọi hàm đã sửa
                       onPressed: cartItems.isEmpty
                           ? null
                           : () => _handleCheckout(context, cartProvider),

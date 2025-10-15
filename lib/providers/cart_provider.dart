@@ -36,6 +36,12 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // HÀM Xóa toàn bộ giỏ hàng
+  void clearCart() {
+    _items.clear();
+    notifyListeners();
+  }
+
   // Hàm xóa sản phẩm khỏi giỏ
   void removeItem(String bookId) {
     _items.removeWhere((item) => item.book.id == bookId);
