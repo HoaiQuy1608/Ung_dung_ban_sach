@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ungdungbansach/models/book_model.dart';
 import 'package:ungdungbansach/widgets/book_card.dart';
+import '/providers/book_service.dart';
+import 'package:ungdungbansach/screen/book_detail_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -14,61 +17,56 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _controller = TextEditingController();
   Timer? _debounce;
-  String _query = '';
+  String _query = ' ';
+  String _selectedCategory = 'All';
 
-  // Mock catalog
-  final List<Book> _allBooks = [
-    Book(
-      id: 's1',
-      title: 'Flutter in Action',
-      author: 'Eric Windmill',
-      imageUrl:
-          'https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=300&h=400&fit=crop',
-      price: 290000,
-      description: 'Practical guide to building apps with Flutter.',
-      rating: 4.6,
-    ),
-    Book(
-      id: 's2',
-      title: 'Clean Code',
-      author: 'Robert C. Martin',
-      imageUrl:
-          'https://images.unsplash.com/photo-1553729459-efe14ef6055d?q=80&w=300&h=400&fit=crop',
-      price: 350000,
-      description: 'A Handbook of Agile Software Craftsmanship.',
-      rating: 4.9,
-    ),
-    Book(
-      id: 's3',
-      title: 'Atomic Habits',
-      author: 'James Clear',
-      imageUrl:
-          'https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=300&h=400&fit=crop',
-      price: 210000,
-      description: 'Tiny changes, remarkable results.',
-      rating: 4.8,
-    ),
+  final List<String> _categories = const [
+    'All',
+    'Programming',
+    'History',
+    'Science',
+    'Fiction',
+    'Business',
   ];
 
-  List<Book> get _filteredBooks {
-    if (_query.isEmpty) return [];
-    final q = _query.toLowerCase();
-    return _allBooks
-        .where(
-          (b) =>
-              b.title.toLowerCase().contains(q) ||
-              b.author.toLowerCase().contains(q),
-        )
-        .toList();
+  List<Book> _getFilteredBooks(BookService bookService) {
+    final allBooks = bookService.books;
+
+    if (allBooks.isEmpty) return [];
+
+    final q = _query.toLowerCase().trim();
+
+    return allBooks.where((b) {
+      final matchesQuery =
+          q.isEmpty ||
+          b.title.toLowerCase().contains(q) ||
+          b.author.toLowerCase().contains(q);
+
+      final matchesCategory =
+          _selectedCategory == 'All' ||
+          b.genres.any((g) => g == _selectedCategory);
+
+      return matchesQuery && matchesCategory;
+    }).toList();
   }
 
-  void _onChanged(String value) {
+  void _onQueryChanged(String value) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 350), () {
       if (mounted) {
         setState(() {
           _query = value.trim();
         });
+      }
+    });
+  }
+
+  void _onCategorySelected(String category) {
+    setState(() {
+      _selectedCategory = category;
+      // Kích hoạt tìm kiếm lại ngay cả khi ô search trống
+      if (_controller.text.trim().isEmpty) {
+        _query = ' ';
       }
     });
   }
@@ -81,65 +79,123 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _query = ' ';
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final bookService = Provider.of<BookService>(context);
+    final filteredBooks = _getFilteredBooks(bookService);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Search Books')),
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          children: [
-            TextField(
+      appBar: AppBar(title: const Text('Tìm Kiếm & Danh Mục')),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: TextField(
               controller: _controller,
-              onChanged: _onChanged,
-              decoration: const InputDecoration(
-                hintText: 'Search by title or author...',
-                prefixIcon: Icon(Icons.search),
+              onChanged: _onQueryChanged,
+              decoration: InputDecoration(
+                hintText: 'Tìm kiếm theo tên sách hoặc tác giả...',
+                prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: _query.isEmpty
-                  ? Center(
-                      child: Text(
-                        'Start typing to search books',
-                        style: GoogleFonts.nunito(color: Colors.grey),
-                      ),
-                    )
-                  : LayoutBuilder(
-                      builder: (context, constraints) {
-                        final crossAxisCount = constraints.maxWidth > 900
-                            ? 6
-                            : constraints.maxWidth > 600
-                            ? 4
-                            : 2;
-                        if (_filteredBooks.isEmpty) {
-                          return Center(
-                            child: Text(
-                              'No results for "$_query"',
-                              style: GoogleFonts.nunito(),
-                            ),
-                          );
-                        }
-                        return GridView.builder(
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: crossAxisCount,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
-                                childAspectRatio: 0.6,
-                              ),
-                          itemCount: _filteredBooks.length,
-                          itemBuilder: (context, index) =>
-                              BookCard(book: _filteredBooks[index]),
-                        );
-                      },
+          ),
+          SizedBox(
+            height: 45,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              itemCount: _categories.length,
+              itemBuilder: (context, index) {
+                final category = _categories[index];
+                final isSelected = _selectedCategory == category;
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                  child: ChoiceChip(
+                    label: Text(category),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      _onCategorySelected(category);
+                    },
+                    selectedColor: Theme.of(context).colorScheme.primary,
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.bold,
                     ),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: bookService.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _query.trim().isEmpty &&
+                      filteredBooks.isEmpty &&
+                      _selectedCategory == 'All'
+                ? Center(
+                    child: Text(
+                      'Bắt đầu nhập để tìm kiếm sách hoặc chọn danh mục.',
+                      style: GoogleFonts.nunito(color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      final crossAxisCount = constraints.maxWidth > 900
+                          ? 6
+                          : constraints.maxWidth > 600
+                          ? 4
+                          : 2;
+
+                      if (filteredBooks.isEmpty) {
+                        return Center(
+                          child: Text(
+                            'Không tìm thấy kết quả phù hợp cho "$_query" trong danh mục "$_selectedCategory".',
+                            style: GoogleFonts.nunito(
+                              color: Colors.grey.shade700,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        );
+                      }
+
+                      return GridView.builder(
+                        padding: const EdgeInsets.all(12.0),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 0.55,
+                        ),
+                        itemCount: filteredBooks.length,
+                        itemBuilder: (context, index) {
+                          final book = filteredBooks[index];
+                          return BookCard(
+                            book: book,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => BookDetailScreen(book: book),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }

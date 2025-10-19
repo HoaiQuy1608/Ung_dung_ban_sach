@@ -19,7 +19,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
     'Kinh tế',
     'Tâm lý',
     'Khoa học',
-    'Thiếu nhi'
+    'Thiếu nhi',
   ];
 
   final _titleController = TextEditingController();
@@ -70,143 +70,158 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
     }
 
     showModalBottomSheet(
-  context: context,
-  isScrollControlled: true,
-  shape: const RoundedRectangleBorder(
-    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-  ),
-  builder: (context) {
-    return StatefulBuilder(
-      builder: (context, setModalState) {  // ✅ thêm setModalState
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 20,
-            right: 20,
-            top: 20,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _isEditing ? 'Chỉnh sửa sách' : 'Thêm sách mới',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 15),
-                GestureDetector(
-                  onTap: () async {
-                    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-                    if (pickedFile != null) {
-                      setModalState(() {
-                        _pickedImage = File(pickedFile.path);
-                      });
-                    }
-                  },
-                  child: _pickedImage == null
-                      ? Container(
-                          height: 150,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Center(child: Text('Chọn ảnh bìa sách')),
-                        )
-                      : ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.file(
-                            _pickedImage!,
-                            height: 150,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                ),
-                const SizedBox(height: 15),
-                TextField(
-                  controller: _titleController,
-                  decoration: const InputDecoration(labelText: 'Tên sách'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: _priceController,
-                  decoration: const InputDecoration(labelText: 'Giá (VNĐ)'),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: _descriptionController,
-                  decoration: const InputDecoration(labelText: 'Mô tả sách'),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 15),
-                DropdownButtonFormField<String>(
-                  value: _selectedCategory,
-                  decoration: const InputDecoration(
-                    labelText: 'Thể loại',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: _categories
-                      .map((category) => DropdownMenuItem<String>(
-                            value: category,
-                            child: Text(category),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    setModalState(() {
-                      _selectedCategory = value;
-                    });
-                  },
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
-                    minimumSize: const Size(double.infinity, 45),
-                  ),
-                  onPressed: () {
-                    if (_titleController.text.isEmpty ||
-                        _priceController.text.isEmpty ||
-                        _descriptionController.text.isEmpty ||
-                        _pickedImage == null ||
-                        _selectedCategory == null) {
-                      _showToast('Vui lòng nhập đầy đủ thông tin', success: false);
-                      return;
-                    }
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            // ✅ thêm setModalState
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 20,
+                right: 20,
+                top: 20,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _isEditing ? 'Chỉnh sửa sách' : 'Thêm sách mới',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    GestureDetector(
+                      onTap: () async {
+                        final pickedFile = await _picker.pickImage(
+                          source: ImageSource.gallery,
+                        );
+                        if (pickedFile != null) {
+                          setModalState(() {
+                            _pickedImage = File(pickedFile.path);
+                          });
+                        }
+                      },
+                      child: _pickedImage == null
+                          ? Container(
+                              height: 150,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Center(
+                                child: Text('Chọn ảnh bìa sách'),
+                              ),
+                            )
+                          : ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.file(
+                                _pickedImage!,
+                                height: 150,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                    ),
+                    const SizedBox(height: 15),
+                    TextField(
+                      controller: _titleController,
+                      decoration: const InputDecoration(labelText: 'Tên sách'),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _priceController,
+                      decoration: const InputDecoration(labelText: 'Giá (VNĐ)'),
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _descriptionController,
+                      decoration: const InputDecoration(
+                        labelText: 'Mô tả sách',
+                      ),
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 15),
+                    DropdownButtonFormField<String>(
+                      value: _selectedCategory,
+                      decoration: const InputDecoration(
+                        labelText: 'Thể loại',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _categories
+                          .map(
+                            (category) => DropdownMenuItem<String>(
+                              value: category,
+                              child: Text(category),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        setModalState(() {
+                          _selectedCategory = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        minimumSize: const Size(double.infinity, 45),
+                      ),
+                      onPressed: () {
+                        if (_titleController.text.isEmpty ||
+                            _priceController.text.isEmpty ||
+                            _descriptionController.text.isEmpty ||
+                            _pickedImage == null ||
+                            _selectedCategory == null) {
+                          _showToast(
+                            'Vui lòng nhập đầy đủ thông tin',
+                            success: false,
+                          );
+                          return;
+                        }
 
-                    final book = {
-                      'title': _titleController.text,
-                      'price': double.tryParse(_priceController.text) ?? 0.0,
-                      'description': _descriptionController.text,
-                      'image': _pickedImage,
-                      'category': _selectedCategory,
-                    };
+                        final book = {
+                          'title': _titleController.text,
+                          'price':
+                              double.tryParse(_priceController.text) ?? 0.0,
+                          'description': _descriptionController.text,
+                          'image': _pickedImage,
+                          'category': _selectedCategory,
+                        };
 
-                    setState(() {
-                      if (_isEditing && _editingIndex != null) {
-                        _books[_editingIndex!] = book;
-                        _showToast('Cập nhật sách thành công ✅');
-                      } else {
-                        _books.add(book);
-                        _showToast('Thêm sách thành công ✅');
-                      }
-                    });
+                        setState(() {
+                          if (_isEditing && _editingIndex != null) {
+                            _books[_editingIndex!] = book;
+                            _showToast('Cập nhật sách thành công ✅');
+                          } else {
+                            _books.add(book);
+                            _showToast('Thêm sách thành công ✅');
+                          }
+                        });
 
-                    Navigator.pop(context);
-                  },
-                  child: Text(_isEditing ? 'Lưu thay đổi' : 'Thêm sách'),
+                        Navigator.pop(context);
+                      },
+                      child: Text(_isEditing ? 'Lưu thay đổi' : 'Thêm sách'),
+                    ),
+                    const SizedBox(height: 15),
+                  ],
                 ),
-                const SizedBox(height: 15),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
-  },
-);
-
   }
 
   void _deleteBook(int index) {
@@ -229,9 +244,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
         child: const Icon(Icons.add),
       ),
       body: _books.isEmpty
-          ? const Center(
-              child: Text('Chưa có sách nào được thêm'),
-            )
+          ? const Center(child: Text('Chưa có sách nào được thêm'))
           : Padding(
               padding: const EdgeInsets.all(10),
               child: GridView.builder(
@@ -254,11 +267,10 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                       children: [
                         Expanded(
                           child: ClipRRect(
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                            child: Image.file(
-                              book['image'],
-                              fit: BoxFit.cover,
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(12),
                             ),
+                            child: Image.file(book['image'], fit: BoxFit.cover),
                           ),
                         ),
                         Padding(
@@ -268,7 +280,9 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                             children: [
                               Text(
                                 book['title'],
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
@@ -277,12 +291,18 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                               ),
                               Text(
                                 book['category'],
-                                style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.blueGrey,
+                                ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
                                 book['description'],
-                                style: const TextStyle(fontSize: 12, color: Colors.black54),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black54,
+                                ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -290,11 +310,18 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   IconButton(
-                                    icon: const Icon(Icons.edit, color: Colors.blue),
-                                    onPressed: () => _openBookForm(edit: true, index: index),
+                                    icon: const Icon(
+                                      Icons.edit,
+                                      color: Colors.blue,
+                                    ),
+                                    onPressed: () =>
+                                        _openBookForm(edit: true, index: index),
                                   ),
                                   IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
                                     onPressed: () => _deleteBook(index),
                                   ),
                                 ],

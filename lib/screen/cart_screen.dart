@@ -1,5 +1,3 @@
-// lib/screens/cart_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,7 +5,6 @@ import 'package:ungdungbansach/widgets/cart_item_tile.dart';
 import 'package:ungdungbansach/providers/cart_provider.dart';
 import 'package:ungdungbansach/providers/auth_provider.dart';
 import 'checkout_screen.dart';
-import '../models/cart_model.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
