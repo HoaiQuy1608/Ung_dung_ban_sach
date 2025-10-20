@@ -24,32 +24,45 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Giả định BookService có tồn tại và fetchBooks là hàm lấy dữ liệu
       Provider.of<BookService>(context, listen: false).fetchBooks();
     });
+  }
+
+  // LOGIC HIỂN THỊ TIÊU ĐỀ ĐÃ ĐƯỢC GIỮ LẠI
+  String titleForIndex(int i) {
+    switch (i) {
+      case 0:
+        return 'Trang chủ';
+      case 1:
+        return 'Tìm kiếm';
+      case 2:
+        return 'Giỏ hàng';
+      case 3:
+        return 'Thông báo';
+      case 4:
+        return 'Tài khoản';
+      default:
+        return 'Bookify';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final bookService = Provider.of<BookService>(context);
 
-    // List các trang ứng với Bottom Bar
     final List<Widget> pages = [
-      // Home grid
+      // Home grid (Giữ nguyên)
       LayoutBuilder(
         builder: (context, constraints) {
-          // Logic responsive cho số cột
           final crossAxisCount = constraints.maxWidth > 900
               ? 6
               : constraints.maxWidth > 600
               ? 4
               : 2;
 
-          // Tỉ lệ khung hình an toàn nhất cho GridView 2 cột (0.58-0.60)
           const double safeAspectRatio = 0.55;
 
           return GridView.builder(
-            // Áp dụng padding trực tiếp và chỉ sử dụng một cuộn (an toàn)
             padding: const EdgeInsets.all(12.0),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
@@ -74,35 +87,23 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
+      // Các màn hình con (Giữ nguyên)
       const SearchScreen(),
       const CartScreen(),
       const NotificationsScreen(),
       const ProfileScreen(),
     ];
 
-    String titleForIndex(int i) {
-      switch (i) {
-        case 0:
-          return 'Trang chủ';
-        case 1:
-          return 'Tìm kiếm';
-        case 2:
-          return 'Giỏ hàng';
-        case 3:
-          return 'Thông báo';
-        case 4:
-          return 'Tài khoản';
-        default:
-          return 'Bookify';
-      }
-    }
-
     return Scaffold(
+      // SỬA ĐỔI: Chỉ hiển thị tiêu đề nếu không phải là Trang chủ
       appBar: AppBar(
-        title: Text(titleForIndex(_currentIndex)),
+        // Chỉ hiển thị tiêu đề nếu không ở tab Home (0), vì Home Grid tự nói lên nó là Trang chủ
+        title: Text(
+          _currentIndex == 0 ? 'Bookify' : titleForIndex(_currentIndex),
+        ),
         actions: const [],
       ),
-      // Bọc IndexedStack bằng SafeArea để tránh tràn viền hệ thống
+      // Bọc IndexedStack bằng SafeArea
       body: SafeArea(
         child: IndexedStack(index: _currentIndex, children: pages),
       ),

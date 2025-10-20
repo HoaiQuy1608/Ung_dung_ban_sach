@@ -9,11 +9,14 @@ class ProfileScreen extends StatelessWidget {
 
   // Widget hiển thị khi người dùng CHƯA đăng nhập
   Widget _buildLoginPrompt(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
+
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.fromLTRB(24.0, topPadding + 20, 24.0, 24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // TIÊU ĐỀ ĐÃ ĐƯỢC XÓA Ở ĐÂY
           Icon(
             Icons.account_circle,
             size: 90,
@@ -55,7 +58,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // HÀM ĐÃ SỬA: Xử lý Đăng xuất và thêm HỘP THOẠI XÁC NHẬN
+  // Hàm xử lý Đăng xuất và thêm HỘP THOẠI XÁC NHẬN
   void _handleLogout(BuildContext context, AuthProvider authProvider) async {
     final bool? shouldLogout = await showDialog<bool>(
       context: context,
@@ -65,11 +68,11 @@ class ProfileScreen extends StatelessWidget {
           content: const Text('Bạn có muốn đăng xuất khỏi tài khoản không?'),
           actions: <Widget>[
             TextButton(
-              onPressed: () => Navigator.of(context).pop(false), // Hủy
+              onPressed: () => Navigator.of(context).pop(false),
               child: const Text('Hủy'),
             ),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(true), // Đăng xuất
+              onPressed: () => Navigator.of(context).pop(true),
               child: const Text(
                 'Đăng xuất',
                 style: TextStyle(color: Colors.red),
@@ -82,10 +85,79 @@ class ProfileScreen extends StatelessWidget {
 
     if (shouldLogout == true) {
       authProvider.logout();
-      // Sau khi logout, ProfileScreen sẽ tự động rebuild và hiển thị LoginPrompt
-      // Không cần Navigator.pop() ở đây trừ khi bạn muốn quay về Home ngay lập tức
-      // Chúng ta sẽ giữ nguyên màn hình Profile (hiển thị lời nhắc đăng nhập)
     }
+  }
+
+  // Widget hiển thị thông tin cá nhân (Đã đăng nhập)
+  Widget _buildUserInfoSection(
+    BuildContext context,
+    User user,
+    AuthProvider authProvider,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          // TIÊU ĐỀ ĐÃ ĐƯỢC XÓA Ở ĐÂY
+          const SizedBox(height: 30), // Giữ lại khoảng cách cho phần Avartar
+          Center(
+            child: CircleAvatar(
+              radius: 44,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: Icon(
+                Icons.person,
+                size: 44,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: Text(
+              user.role == UserRole.admin ? 'Quản trị viên' : 'Khách hàng',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+          Center(
+            child: Text(user.email, style: const TextStyle(color: Colors.grey)),
+          ),
+          const SizedBox(height: 24),
+          const Divider(),
+
+          // 2. Các Chức năng chính
+          ListTile(
+            leading: const Icon(Icons.receipt_long_outlined),
+            title: const Text('Đơn hàng của tôi'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {},
+          ),
+          ListTile(
+            leading: const Icon(Icons.favorite_border),
+            title: const Text('Sách yêu thích'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {},
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings_outlined),
+            title: const Text('Cài đặt ứng dụng'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {},
+          ),
+          const SizedBox(height: 20),
+
+          // 3. Nút Đăng xuất
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Đăng xuất'),
+            onTap: () => _handleLogout(context, authProvider),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -95,84 +167,18 @@ class ProfileScreen extends StatelessWidget {
         final user = authProvider.currentUser;
         final isAuthenticated = authProvider.isAuthenticated;
 
-        // Nếu CHƯA đăng nhập, hiển thị lời nhắc đăng nhập
-        if (!isAuthenticated) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Tài Khoản')),
-            body: _buildLoginPrompt(context),
-          );
-        }
-
-        // Nếu ĐÃ đăng nhập, hiển thị thông tin và chức năng
         return Scaffold(
-          appBar: AppBar(title: const Text('Trang Cá Nhân')),
-          body: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              // 1. Phần Avatar và Thông tin cơ bản
-              const SizedBox(height: 12),
-              Center(
-                child: CircleAvatar(
-                  radius: 44,
-                  child: Icon(
-                    Icons.person,
-                    size: 44,
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Center(
-                child: Text(
-                  // Hiển thị vai trò (Admin/User)
-                  user?.role == UserRole.admin ? 'Quản trị viên' : 'Khách hàng',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-              ),
-              Center(
-                child: Text(
-                  // Hiển thị Email người dùng
-                  user?.email ?? 'N/A',
-                  style: const TextStyle(color: Colors.grey),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Divider(),
+          // APPBAR TỐI GIẢN (Để tránh tiêu đề thừa)
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(0),
+            child: AppBar(title: const SizedBox()),
+          ),
 
-              // 2. Các Chức năng chính
-              ListTile(
-                leading: const Icon(Icons.receipt_long_outlined),
-                title: const Text('Đơn hàng của tôi'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {},
-              ),
-              ListTile(
-                leading: const Icon(Icons.favorite_border),
-                title: const Text('Sách yêu thích'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {},
-              ),
-              ListTile(
-                leading: const Icon(Icons.settings_outlined),
-                title: const Text('Cài đặt ứng dụng'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {},
-              ),
-              const SizedBox(height: 20),
-
-              // 3. Nút Đăng xuất
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text('Đăng xuất'),
-                onTap: () =>
-                    _handleLogout(context, authProvider), // GỌI HÀM XÁC NHẬN
-              ),
-            ],
+          // BODY
+          body: SingleChildScrollView(
+            child: isAuthenticated
+                ? _buildUserInfoSection(context, user!, authProvider)
+                : _buildLoginPrompt(context),
           ),
         );
       },

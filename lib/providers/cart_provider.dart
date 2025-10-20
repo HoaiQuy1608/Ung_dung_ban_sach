@@ -16,6 +16,11 @@ class CartProvider extends ChangeNotifier {
     );
   }
 
+  // Tính tổng số lượng tất cả sản phẩm trong giỏ
+  int get totalItems {
+    return _items.fold(0, (sum, item) => sum + item.quantity);
+  }
+
   //Hàm thêm vào giỏ hàng
   void addItem(Book book) {
     final existingItemIndex = _items.indexWhere(

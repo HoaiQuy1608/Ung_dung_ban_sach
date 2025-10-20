@@ -37,15 +37,14 @@ class CartScreen extends StatelessWidget {
         false;
   }
 
-  // HÀM XỬ LÝ CHECKOUT CHÍNH (ĐIỀU HƯỚNG SANG CHECKOUT SCREEN)
   void _handleCheckout(BuildContext context, CartProvider cartProvider) async {
     final total = cartProvider.totalPrice;
     final cartItems = cartProvider.items;
 
     if (cartItems.isEmpty) return;
 
-    // 1. Kiểm tra Đăng nhập
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
     if (!authProvider.isAuthenticated) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -56,14 +55,13 @@ class CartScreen extends StatelessWidget {
       return;
     }
 
-    // 2. Xác nhận và chuyển sang màn hình Checkout
     final confirmed = await _confirmCheckout(context, total);
 
     if (confirmed) {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => CheckoutScreen(
-            itemsToBuy: cartItems, // TRUYỀN TOÀN BỘ GIỎ HÀNG
+            itemsToBuy: cartItems,
             source: CheckoutSource.cart,
           ),
         ),
@@ -80,12 +78,21 @@ class CartScreen extends StatelessWidget {
         final total = cartProvider.totalPrice;
 
         return Scaffold(
-          appBar: AppBar(
-            title: Text('Giỏ Hàng (${cartItems.length} sản phẩm)'),
+          // APPBAR GỌN GÀNG NHẤT: Không có chiều cao, không có tiêu đề.
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(0),
+            child: AppBar(
+              title: const SizedBox(),
+              automaticallyImplyLeading: false,
+            ),
           ),
           body: Column(
             children: [
+              // TIÊU ĐỀ ĐÃ ĐƯỢC XÓA Ở ĐÂY!
+              // Trước đó có một Padding chứa Row và Text('Giỏ Hàng...') đã bị xóa.
+
               // 1. Danh sách sản phẩm
+              // Thêm padding cho nội dung để nó không bị dính vào Status Bar
               Expanded(
                 child: cartItems.isEmpty
                     ? Center(
@@ -106,7 +113,12 @@ class CartScreen extends StatelessWidget {
                         ),
                       )
                     : ListView.separated(
-                        padding: const EdgeInsets.all(12),
+                        padding: EdgeInsets.fromLTRB(
+                          12,
+                          MediaQuery.of(context).padding.top + 10,
+                          12,
+                          12,
+                        ),
                         itemCount: cartItems.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 8),
                         itemBuilder: (context, index) {

@@ -6,6 +6,7 @@ import 'package:ungdungbansach/models/book_model.dart';
 import 'package:ungdungbansach/widgets/book_card.dart';
 import '/providers/book_service.dart';
 import 'package:ungdungbansach/screen/book_detail_screen.dart';
+import 'package:ungdungbansach/widgets/cart_icon_badge.dart'; // Đã thêm CartIconBadge
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -29,6 +30,7 @@ class _SearchScreenState extends State<SearchScreen> {
     'Business',
   ];
 
+  // Logic lọc sách (giữ nguyên)
   List<Book> _getFilteredBooks(BookService bookService) {
     final allBooks = bookService.books;
 
@@ -41,7 +43,6 @@ class _SearchScreenState extends State<SearchScreen> {
           q.isEmpty ||
           b.title.toLowerCase().contains(q) ||
           b.author.toLowerCase().contains(q);
-
       final matchesCategory =
           _selectedCategory == 'All' ||
           b.genres.any((g) => g == _selectedCategory);
@@ -64,7 +65,6 @@ class _SearchScreenState extends State<SearchScreen> {
   void _onCategorySelected(String category) {
     setState(() {
       _selectedCategory = category;
-      // Kích hoạt tìm kiếm lại ngay cả khi ô search trống
       if (_controller.text.trim().isEmpty) {
         _query = ' ';
       }
@@ -90,23 +90,38 @@ class _SearchScreenState extends State<SearchScreen> {
     final filteredBooks = _getFilteredBooks(bookService);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tìm Kiếm & Danh Mục')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: TextField(
-              controller: _controller,
-              onChanged: _onQueryChanged,
-              decoration: InputDecoration(
-                hintText: 'Tìm kiếm theo tên sách hoặc tác giả...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+      appBar: AppBar(
+        title: SizedBox(
+          height: 40,
+          child: TextField(
+            controller: _controller,
+            onChanged: _onQueryChanged,
+            decoration: InputDecoration(
+              hintText: 'Tìm kiếm theo tên sách hoặc tác giả...',
+              prefixIcon: const Icon(Icons.search, size: 20),
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 0,
+                horizontal: 10,
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide.none,
               ),
             ),
           ),
+        ),
+        actions: const [CartIconBadge(), SizedBox(width: 8)],
+        backgroundColor: Theme.of(context).colorScheme.primary,
+      ),
+
+      body: Column(
+        children: [
           SizedBox(
             height: 45,
             child: ListView.builder(
@@ -145,7 +160,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 ? Center(
                     child: Text(
                       'Bắt đầu nhập để tìm kiếm sách hoặc chọn danh mục.',
-                      style: GoogleFonts.nunito(color: Colors.grey),
+                      style: GoogleFonts.nunito(
+                        color: Colors.grey,
+                        fontSize: 16,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   )
@@ -160,9 +178,10 @@ class _SearchScreenState extends State<SearchScreen> {
                       if (filteredBooks.isEmpty) {
                         return Center(
                           child: Text(
-                            'Không tìm thấy kết quả phù hợp cho "$_query" trong danh mục "$_selectedCategory".',
+                            'Không tìm thấy kết quả phù hợp.',
                             style: GoogleFonts.nunito(
                               color: Colors.grey.shade700,
+                              fontSize: 16,
                             ),
                             textAlign: TextAlign.center,
                           ),
