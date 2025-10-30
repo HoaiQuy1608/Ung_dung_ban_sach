@@ -8,6 +8,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:ungdungbansach/providers/cart_provider.dart';
 import 'package:ungdungbansach/providers/auth_provider.dart';
 import 'package:ungdungbansach/providers/book_service.dart';
+import 'package:ungdungbansach/providers/order_provider.dart';
 import 'package:ungdungbansach/screen/home_screen.dart';
 
 void main() {
@@ -25,6 +26,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => AuthProvider()),
         ChangeNotifierProvider(create: (context) => BookService()),
         ChangeNotifierProvider(create: (context) => CartProvider()),
+        ChangeNotifierProvider(create: (context) => OrderProvider()),
       ],
       child: MaterialApp(
         title: 'Bookify',
