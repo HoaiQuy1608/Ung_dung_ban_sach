@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:ungdungbansach/models/user.dart';
 import '../providers/auth_provider.dart';
 import 'login_screen.dart';
+import 'wishlist_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -16,7 +17,6 @@ class ProfileScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // TIÊU ĐỀ ĐÃ ĐƯỢC XÓA Ở ĐÂY
           Icon(
             Icons.account_circle,
             size: 90,
@@ -38,7 +38,6 @@ class ProfileScreen extends StatelessWidget {
 
           ElevatedButton(
             onPressed: () {
-              // Chuyển đến màn hình Đăng nhập
               Navigator.of(
                 context,
               ).push(MaterialPageRoute(builder: (_) => const LoginScreen()));
@@ -98,8 +97,7 @@ class ProfileScreen extends StatelessWidget {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          // TIÊU ĐỀ ĐÃ ĐƯỢC XÓA Ở ĐÂY
-          const SizedBox(height: 30), // Giữ lại khoảng cách cho phần Avartar
+          const SizedBox(height: 30),
           Center(
             child: CircleAvatar(
               radius: 44,
@@ -139,7 +137,11 @@ class ProfileScreen extends StatelessWidget {
             leading: const Icon(Icons.favorite_border),
             title: const Text('Sách yêu thích'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
+            onTap: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const WishlistScreen()));
+            },
           ),
           ListTile(
             leading: const Icon(Icons.settings_outlined),
@@ -168,7 +170,6 @@ class ProfileScreen extends StatelessWidget {
         final isAuthenticated = authProvider.isAuthenticated;
 
         return Scaffold(
-          // APPBAR TỐI GIẢN (Để tránh tiêu đề thừa)
           appBar: PreferredSize(
             preferredSize: const Size.fromHeight(0),
             child: AppBar(title: const SizedBox()),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:ungdungbansach/models/book_model.dart';
 
 class BookService extends ChangeNotifier {
-  // Dữ liệu giả lập (Mock Data)
   final List<Book> _books = [
     Book(
       id: 'b1',
@@ -58,12 +57,26 @@ class BookService extends ChangeNotifier {
   bool get isLoading => _isLoading;
   List<Book> get books => [..._books];
 
-  // Giả lập việc tải dữ liệu mất 2 giây
   Future<void> fetchBooks() async {
     _isLoading = true;
     notifyListeners();
     await Future.delayed(const Duration(seconds: 2));
     _isLoading = false;
     notifyListeners();
+  }
+
+  void toggleFavoriteStatus(String bookId) {
+    final index = _books.indexWhere((book) => book.id == bookId);
+    if (index >= 0) {
+      final existingBook = _books[index];
+      _books[index] = existingBook.copyWith(
+        isFavorite: !existingBook.isFavorite,
+      );
+      notifyListeners();
+    }
+  }
+
+  List<Book> get favoriteBooks {
+    return _books.where((book) => book.isFavorite).toList();
   }
 }
