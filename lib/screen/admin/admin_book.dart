@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:toastification/toastification.dart';
 
@@ -11,16 +13,11 @@ class BookManagementScreen extends StatefulWidget {
 }
 
 class _BookManagementScreenState extends State<BookManagementScreen> {
-  final List<Map<String, dynamic>> _books = [];
+  final DatabaseReference _bookRef = FirebaseDatabase.instance.ref('books');
+  final DatabaseReference _categoryRef = FirebaseDatabase.instance.ref('categories');
 
-  // 👉 Danh sách thể loại giả (sau này bạn có thể lấy từ màn hình quản lý thể loại)
-  final List<String> _categories = [
-    'Tiểu thuyết',
-    'Kinh tế',
-    'Tâm lý',
-    'Khoa học',
-    'Thiếu nhi',
-  ];
+  final List<Map<String, dynamic>> _books = [];
+  List<String> _categories = [];
 
   final _titleController = TextEditingController();
   final _priceController = TextEditingController();
@@ -28,10 +25,54 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
   String? _selectedCategory;
   File? _pickedImage;
   bool _isEditing = false;
-  int? _editingIndex;
+  String? _editingKey;
 
   final ImagePicker _picker = ImagePicker();
 
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+    _loadBooks();
+  }
+
+  /// 🧩 Lấy danh sách thể loại
+  void _loadCategories() {
+    _categoryRef.onValue.listen((event) {
+      final data = event.snapshot.value;
+      if (data != null && data is Map) {
+        setState(() {
+          _categories = data.values
+              .map((cat) => cat['name'].toString())
+              .toList();
+        });
+      }
+    });
+  }
+
+  /// 📖 Lấy danh sách sách
+  void _loadBooks() {
+    _bookRef.onValue.listen((event) {
+      final data = event.snapshot.value;
+      if (data != null && data is Map) {
+        setState(() {
+          _books.clear();
+          data.forEach((key, value) {
+            _books.add({
+              'key': key,
+              'title': value['title'],
+              'price': value['price'],
+              'description': value['description'],
+              'imageBase64': value['imageBase64'],
+              'category': value['category'],
+            });
+          });
+        });
+      }
+    });
+  }
+
+  /// 📸 Chọn ảnh bìa
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -41,6 +82,13 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
     }
   }
 
+  /// 🔥 Chuyển ảnh sang Base64 string
+  Future<String> _convertImageToBase64(File image) async {
+    final bytes = await image.readAsBytes();
+    return base64Encode(bytes);
+  }
+
+  /// 🔔 Toast thông báo
   void _showToast(String message, {bool success = true}) {
     toastification.show(
       context: context,
@@ -51,15 +99,16 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
     );
   }
 
+  /// 🧾 Mở form thêm/sửa sách
   void _openBookForm({bool edit = false, int? index}) {
     if (edit && index != null) {
-      _titleController.text = _books[index]['title'];
-      _priceController.text = _books[index]['price'].toString();
-      _descriptionController.text = _books[index]['description'];
-      _pickedImage = _books[index]['image'];
-      _selectedCategory = _books[index]['category'];
+      final book = _books[index];
+      _titleController.text = book['title'];
+      _priceController.text = book['price'].toString();
+      _descriptionController.text = book['description'];
+      _selectedCategory = book['category'];
       _isEditing = true;
-      _editingIndex = index;
+      _editingKey = book['key'];
     } else {
       _titleController.clear();
       _priceController.clear();
@@ -67,6 +116,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
       _pickedImage = null;
       _selectedCategory = null;
       _isEditing = false;
+      _editingKey = null;
     }
 
     showModalBottomSheet(
@@ -78,7 +128,6 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            // ✅ thêm setModalState
             return Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -100,9 +149,8 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                     const SizedBox(height: 15),
                     GestureDetector(
                       onTap: () async {
-                        final pickedFile = await _picker.pickImage(
-                          source: ImageSource.gallery,
-                        );
+                        final pickedFile =
+                            await _picker.pickImage(source: ImageSource.gallery);
                         if (pickedFile != null) {
                           setModalState(() {
                             _pickedImage = File(pickedFile.path);
@@ -145,9 +193,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                     const SizedBox(height: 10),
                     TextField(
                       controller: _descriptionController,
-                      decoration: const InputDecoration(
-                        labelText: 'Mô tả sách',
-                      ),
+                      decoration: const InputDecoration(labelText: 'Mô tả sách'),
                       maxLines: 3,
                     ),
                     const SizedBox(height: 15),
@@ -177,37 +223,35 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                         backgroundColor: Colors.redAccent,
                         minimumSize: const Size(double.infinity, 45),
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         if (_titleController.text.isEmpty ||
                             _priceController.text.isEmpty ||
                             _descriptionController.text.isEmpty ||
-                            _pickedImage == null ||
                             _selectedCategory == null) {
-                          _showToast(
-                            'Vui lòng nhập đầy đủ thông tin',
-                            success: false,
-                          );
+                          _showToast('Vui lòng nhập đầy đủ thông tin', success: false);
                           return;
                         }
 
-                        final book = {
+                        String? imageBase64;
+                        if (_pickedImage != null) {
+                          imageBase64 = await _convertImageToBase64(_pickedImage!);
+                        }
+
+                        final bookData = {
                           'title': _titleController.text,
-                          'price':
-                              double.tryParse(_priceController.text) ?? 0.0,
+                          'price': double.tryParse(_priceController.text) ?? 0.0,
                           'description': _descriptionController.text,
-                          'image': _pickedImage,
+                          'imageBase64': imageBase64 ?? '',
                           'category': _selectedCategory,
                         };
 
-                        setState(() {
-                          if (_isEditing && _editingIndex != null) {
-                            _books[_editingIndex!] = book;
-                            _showToast('Cập nhật sách thành công ✅');
-                          } else {
-                            _books.add(book);
-                            _showToast('Thêm sách thành công ✅');
-                          }
-                        });
+                        if (_isEditing && _editingKey != null) {
+                          await _bookRef.child(_editingKey!).update(bookData);
+                          _showToast('Cập nhật sách thành công ✅');
+                        } else {
+                          await _bookRef.push().set(bookData);
+                          _showToast('Thêm sách thành công ✅');
+                        }
 
                         Navigator.pop(context);
                       },
@@ -224,11 +268,11 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
     );
   }
 
-  void _deleteBook(int index) {
-    setState(() {
-      _books.removeAt(index);
-      _showToast('Xoá sách thành công 🗑');
-    });
+  /// ❌ Xoá sách
+  void _deleteBook(int index) async {
+    final key = _books[index]['key'];
+    await _bookRef.child(key).remove();
+    _showToast('Xoá sách thành công 🗑');
   }
 
   @override
@@ -270,7 +314,12 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                             borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(12),
                             ),
-                            child: Image.file(book['image'], fit: BoxFit.cover),
+                            child: (book['imageBase64'] ?? '').isEmpty
+                                ? const Icon(Icons.image_not_supported)
+                                : Image.memory(
+                                    base64Decode(book['imageBase64']),
+                                    fit: BoxFit.cover,
+                                  ),
                           ),
                         ),
                         Padding(
@@ -280,9 +329,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                             children: [
                               Text(
                                 book['title'],
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: const TextStyle(fontWeight: FontWeight.bold),
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
@@ -310,18 +357,11 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   IconButton(
-                                    icon: const Icon(
-                                      Icons.edit,
-                                      color: Colors.blue,
-                                    ),
-                                    onPressed: () =>
-                                        _openBookForm(edit: true, index: index),
+                                    icon: const Icon(Icons.edit, color: Colors.blue),
+                                    onPressed: () => _openBookForm(edit: true, index: index),
                                   ),
                                   IconButton(
-                                    icon: const Icon(
-                                      Icons.delete,
-                                      color: Colors.red,
-                                    ),
+                                    icon: const Icon(Icons.delete, color: Colors.red),
                                     onPressed: () => _deleteBook(index),
                                   ),
                                 ],

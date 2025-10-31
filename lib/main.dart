@@ -13,10 +13,12 @@ import 'package:ungdungbansach/providers/order_provider.dart';
 import 'package:ungdungbansach/screen/home_screen.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); 
+  WidgetsFlutterBinding.ensureInitialized();
+  
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-);
+    options: DefaultFirebaseOptions.currentPlatform, 
+  );
+
   runApp(const MyApp());
 }
 
