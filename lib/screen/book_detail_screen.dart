@@ -128,7 +128,7 @@ class BookDetailScreen extends StatelessWidget {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: Image.network(
-                          book.imageUrl
+                          book.imageBase64
                               .replaceAll('w=150', 'w=300')
                               .replaceAll('h=200', 'h=400'),
                           height: 350,

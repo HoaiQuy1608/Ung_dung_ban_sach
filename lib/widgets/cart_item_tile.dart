@@ -24,7 +24,7 @@ class CartItemTile extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
-                book.imageUrl,
+                book.imageBase64,
                 width: 64,
                 height: 86,
                 fit: BoxFit.cover,

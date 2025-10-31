@@ -25,7 +25,7 @@ class BookCard extends StatelessWidget {
             AspectRatio(
               aspectRatio: 3 / 4,
               child: CachedNetworkImage(
-                imageUrl: book.imageUrl,
+                imageUrl: book.imageBase64,
                 fit: BoxFit.cover,
                 placeholder: (context, _) => Center(
                   child: CircularProgressIndicator(

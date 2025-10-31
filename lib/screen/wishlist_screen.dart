@@ -74,7 +74,7 @@ class WishlistScreen extends StatelessWidget {
                         width: 50,
                         height: 70,
                         child: CachedNetworkImage(
-                          imageUrl: book.imageUrl,
+                          imageUrl: book.imageBase64,
                           fit: BoxFit.cover,
                           placeholder: (context, url) =>
                               Container(color: Colors.grey[200]),

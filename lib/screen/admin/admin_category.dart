@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:toastification/toastification.dart';
+import '/models/category_model.dart'; // 👈 import model
 
 class AdminCategory extends StatefulWidget {
   const AdminCategory({Key? key}) : super(key: key);
@@ -22,13 +23,15 @@ class _AdminCategoryState extends State<AdminCategory> {
     ).ref().child('categories');
   }
 
-  void _showCategoryDialog({String? currentName, String? id}) {
-    final controller = TextEditingController(text: currentName ?? '');
+  // 🧾 Thêm / sửa thể loại
+  void _showCategoryDialog({CategoryModel? category}) {
+    final controller = TextEditingController(text: category?.name ?? '');
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(id == null ? 'Thêm thể loại' : 'Chỉnh sửa thể loại'),
+          title: Text(category == null ? 'Thêm thể loại' : 'Chỉnh sửa thể loại'),
           content: TextField(
             controller: controller,
             decoration: const InputDecoration(
@@ -44,9 +47,12 @@ class _AdminCategoryState extends State<AdminCategory> {
               onPressed: () async {
                 final newName = controller.text.trim();
                 if (newName.isEmpty) return;
+
                 try {
-                  if (id == null) {
-                    await _dbRef.push().set({'name': newName});
+                  if (category == null) {
+                    // Thêm mới
+                    final newCat = CategoryModel(id: '', name: newName);
+                    await _dbRef.push().set(newCat.toJson());
                     toastification.show(
                       context: context,
                       title: const Text('Thêm thể loại thành công'),
@@ -54,7 +60,8 @@ class _AdminCategoryState extends State<AdminCategory> {
                       autoCloseDuration: const Duration(seconds: 2),
                     );
                   } else {
-                    await _dbRef.child(id).update({'name': newName});
+                    // Cập nhật
+                    await _dbRef.child(category.id).update({'name': newName});
                     toastification.show(
                       context: context,
                       title: const Text('Cập nhật thể loại thành công'),
@@ -71,6 +78,7 @@ class _AdminCategoryState extends State<AdminCategory> {
                     autoCloseDuration: const Duration(seconds: 2),
                   );
                 }
+
                 if (mounted) Navigator.pop(context);
               },
               child: const Text('Lưu'),
@@ -81,12 +89,13 @@ class _AdminCategoryState extends State<AdminCategory> {
     );
   }
 
-  void _deleteCategory(String id, String name) {
+  // 🗑 Xóa thể loại
+  void _deleteCategory(CategoryModel category) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Xác nhận'),
-        content: Text('Bạn có chắc muốn xóa thể loại "$name"?'),
+        content: Text('Bạn có chắc muốn xóa thể loại "${category.name}"?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
@@ -94,7 +103,7 @@ class _AdminCategoryState extends State<AdminCategory> {
           ElevatedButton(
             onPressed: () async {
               try {
-                await _dbRef.child(id).remove();
+                await _dbRef.child(category.id).remove();
                 toastification.show(
                   context: context,
                   title: const Text('Đã xóa thể loại'),
@@ -137,40 +146,21 @@ class _AdminCategoryState extends State<AdminCategory> {
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return Center(
-                  child: Text('Lỗi: ${snapshot.error}',
-                      style: const TextStyle(color: Colors.red)));
-            }
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            final data = snapshot.data!.snapshot.value;
-            List<Map<String, dynamic>> categories = [];
-
-            if (data != null) {
-              if (data is Map) {
-                categories = data.entries.map((e) {
-                  final value = e.value;
-                  return {
-                    'id': e.key,
-                    'name': (value is Map && value['name'] != null)
-                        ? value['name'].toString()
-                        : 'Không rõ tên',
-                  };
-                }).toList();
-              } else if (data is List) {
-                for (int i = 0; i < data.length; i++) {
-                  final item = data[i];
-                  if (item != null && item is Map && item['name'] != null) {
-                    categories.add({'id': i.toString(), 'name': item['name']});
-                  }
-                }
-              }
+                child: Text(
+                  'Lỗi: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.red),
+                ),
+              );
             }
 
-            if (categories.isEmpty) {
+            if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
               return const Center(child: Text('Chưa có thể loại nào'));
             }
+
+            final raw = snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
+            final categories = raw.entries
+                .map((e) => CategoryModel.fromJson(e.key, e.value))
+                .toList();
 
             return ListView.builder(
               padding: const EdgeInsets.all(12),
@@ -179,23 +169,18 @@ class _AdminCategoryState extends State<AdminCategory> {
                 final item = categories[index];
                 return Card(
                   child: ListTile(
-                    leading:
-                        const Icon(Icons.category, color: Colors.deepPurple),
-                    title: Text(item['name']),
+                    leading: const Icon(Icons.category, color: Colors.deepPurple),
+                    title: Text(item.name),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
                           icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () => _showCategoryDialog(
-                            currentName: item['name'],
-                            id: item['id'],
-                          ),
+                          onPressed: () => _showCategoryDialog(category: item),
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () =>
-                              _deleteCategory(item['id'], item['name']),
+                          onPressed: () => _deleteCategory(item),
                         ),
                       ],
                     ),

@@ -6,7 +6,7 @@ import 'package:ungdungbansach/models/book_model.dart';
 import 'package:ungdungbansach/widgets/book_card.dart';
 import '/providers/book_service.dart';
 import 'package:ungdungbansach/screen/book_detail_screen.dart';
-import 'package:ungdungbansach/widgets/cart_icon_badge.dart'; // Đã thêm CartIconBadge
+import 'package:ungdungbansach/widgets/cart_icon_badge.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -18,7 +18,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _controller = TextEditingController();
   Timer? _debounce;
-  String _query = ' ';
+  String _query = '';
   String _selectedCategory = 'All';
 
   final List<String> _categories = const [
@@ -30,22 +30,22 @@ class _SearchScreenState extends State<SearchScreen> {
     'Business',
   ];
 
-  // Logic lọc sách (giữ nguyên)
+  // 🔍 Hàm lọc sách
   List<Book> _getFilteredBooks(BookService bookService) {
     final allBooks = bookService.books;
-
     if (allBooks.isEmpty) return [];
 
     final q = _query.toLowerCase().trim();
 
-    return allBooks.where((b) {
+    return allBooks.where((book) {
       final matchesQuery =
           q.isEmpty ||
-          b.title.toLowerCase().contains(q) ||
-          b.author.toLowerCase().contains(q);
+          book.title.toLowerCase().contains(q) ||
+          book.author.toLowerCase().contains(q);
+
       final matchesCategory =
           _selectedCategory == 'All' ||
-          b.genres.any((g) => g == _selectedCategory);
+          book.genre.toLowerCase() == _selectedCategory.toLowerCase();
 
       return matchesQuery && matchesCategory;
     }).toList();
@@ -55,9 +55,7 @@ class _SearchScreenState extends State<SearchScreen> {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 350), () {
       if (mounted) {
-        setState(() {
-          _query = value.trim();
-        });
+        setState(() => _query = value.trim());
       }
     });
   }
@@ -66,7 +64,7 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() {
       _selectedCategory = category;
       if (_controller.text.trim().isEmpty) {
-        _query = ' ';
+        _query = '';
       }
     });
   }
@@ -81,7 +79,7 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
-    _query = ' ';
+    _query = '';
   }
 
   @override
@@ -99,17 +97,11 @@ class _SearchScreenState extends State<SearchScreen> {
             decoration: InputDecoration(
               hintText: 'Tìm kiếm theo tên sách hoặc tác giả...',
               prefixIcon: const Icon(Icons.search, size: 20),
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 0,
-                horizontal: 10,
-              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
               filled: true,
               fillColor: Colors.white,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: BorderSide.none,
-              ),
-              enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide: BorderSide.none,
               ),
@@ -122,6 +114,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
       body: Column(
         children: [
+          // 🎯 Thanh chọn danh mục
           SizedBox(
             height: 45,
             child: ListView.builder(
@@ -137,9 +130,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   child: ChoiceChip(
                     label: Text(category),
                     selected: isSelected,
-                    onSelected: (selected) {
-                      _onCategorySelected(category);
-                    },
+                    onSelected: (_) => _onCategorySelected(category),
                     selectedColor: Theme.of(context).colorScheme.primary,
                     labelStyle: TextStyle(
                       color: isSelected ? Colors.white : Colors.black87,
@@ -151,68 +142,70 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
           const SizedBox(height: 12),
+
+          // 📚 Danh sách sách
           Expanded(
             child: bookService.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : _query.trim().isEmpty &&
-                      filteredBooks.isEmpty &&
-                      _selectedCategory == 'All'
-                ? Center(
-                    child: Text(
-                      'Bắt đầu nhập để tìm kiếm sách hoặc chọn danh mục.',
-                      style: GoogleFonts.nunito(
-                        color: Colors.grey,
-                        fontSize: 16,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  )
-                : LayoutBuilder(
-                    builder: (context, constraints) {
-                      final crossAxisCount = constraints.maxWidth > 900
-                          ? 6
-                          : constraints.maxWidth > 600
-                          ? 4
-                          : 2;
-
-                      if (filteredBooks.isEmpty) {
-                        return Center(
-                          child: Text(
-                            'Không tìm thấy kết quả phù hợp.',
-                            style: GoogleFonts.nunito(
-                              color: Colors.grey.shade700,
-                              fontSize: 16,
-                            ),
-                            textAlign: TextAlign.center,
+                : filteredBooks.isEmpty && _query.isEmpty && _selectedCategory == 'All'
+                    ? Center(
+                        child: Text(
+                          'Bắt đầu nhập để tìm kiếm sách hoặc chọn danh mục.',
+                          style: GoogleFonts.nunito(
+                            color: Colors.grey,
+                            fontSize: 16,
                           ),
-                        );
-                      }
-
-                      return GridView.builder(
-                        padding: const EdgeInsets.all(12.0),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 0.55,
+                          textAlign: TextAlign.center,
                         ),
-                        itemCount: filteredBooks.length,
-                        itemBuilder: (context, index) {
-                          final book = filteredBooks[index];
-                          return BookCard(
-                            book: book,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => BookDetailScreen(book: book),
+                      )
+                    : LayoutBuilder(
+                        builder: (context, constraints) {
+                          final crossAxisCount = constraints.maxWidth > 900
+                              ? 6
+                              : constraints.maxWidth > 600
+                                  ? 4
+                                  : 2;
+
+                          if (filteredBooks.isEmpty) {
+                            return Center(
+                              child: Text(
+                                'Không tìm thấy kết quả phù hợp.',
+                                style: GoogleFonts.nunito(
+                                  color: Colors.grey.shade700,
+                                  fontSize: 16,
                                 ),
+                                textAlign: TextAlign.center,
+                              ),
+                            );
+                          }
+
+                          return GridView.builder(
+                            padding: const EdgeInsets.all(12.0),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: crossAxisCount,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: 0.55,
+                            ),
+                            itemCount: filteredBooks.length,
+                            itemBuilder: (context, index) {
+                              final book = filteredBooks[index];
+                              return BookCard(
+                                book: book,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          BookDetailScreen(book: book),
+                                    ),
+                                  );
+                                },
                               );
                             },
                           );
                         },
-                      );
-                    },
-                  ),
+                      ),
           ),
         ],
       ),
