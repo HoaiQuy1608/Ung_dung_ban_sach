@@ -4,8 +4,8 @@ class Book {
   final String id;
   final String title;
   final String author;
-  final String genre; // ✅ chỉ 1 thể loại thôi
-  final String imageBase64; // ✅ lưu ảnh dạng base64
+  final String genre; // ✅ chỉ 1 thể loại
+  final String imageBase64; // ✅ ảnh base64
   final double price;
   final String description;
   final double rating;
@@ -25,9 +25,10 @@ class Book {
     this.isFavorite = false,
   });
 
-  factory Book.fromJson(Map<String, dynamic> json, Map<String, dynamic> map) {
+  /// ✅ Chuyển từ JSON Firebase sang model
+  factory Book.fromJson(String id, Map<String, dynamic> json) {
     return Book(
-      id: json['id'] ?? '',
+      id: id,
       title: json['title'] ?? '',
       author: json['author'] ?? '',
       genre: json['genre'] ?? '',
@@ -36,13 +37,14 @@ class Book {
       description: json['description'] ?? '',
       rating: (json['rating'] ?? 0).toDouble(),
       status: BookStatus.values.firstWhere(
-        (e) => e.name == json['status'],
+        (e) => e.name == (json['status'] ?? 'available'),
         orElse: () => BookStatus.available,
       ),
       isFavorite: json['isFavorite'] ?? false,
     );
   }
 
+  /// ✅ Chuyển sang JSON để lưu Firebase
   Map<String, dynamic> toJson() {
     return {
       'id': id,
