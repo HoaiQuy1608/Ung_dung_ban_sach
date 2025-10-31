@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 import '../models/cart_model.dart';
+import '../providers/order_provider.dart';
+import '../providers/auth_provider.dart';
 
-// ENUM CẦN THIẾT
 enum CheckoutSource { cart, quickBuy }
 
 class CheckoutScreen extends StatefulWidget {
@@ -41,25 +42,38 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final double total = widget.itemsToBuy.fold(
+      0,
+      (sum, item) => sum + (item.book.price * item.quantity),
+    );
     final String formattedTotal = cartProvider.formatPrice(_total);
+    final String actualUserId = authProvider.currentUser!.email;
 
-    // 1. Xóa giỏ hàng (nếu đến từ luồng Giỏ hàng)
+    orderProvider.addOrder(
+      userId: actualUserId,
+      name: _nameController.text,
+      phone: _phoneController.text,
+      address: _addressController.text,
+      totalAmount: total,
+      items: widget.itemsToBuy,
+    );
+
     if (widget.source == CheckoutSource.cart) {
       cartProvider.clearCart();
     }
 
-    // 2. Thông báo và chuyển hướng
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Đặt hàng thành công! Đơn hàng trị giá $formattedTotal sẽ được giao đến ${_addressController.text}.',
+          'Đặt hàng thành công! Đơn hàng trị giá $formattedTotal đã được giao đến ${_addressController.text}.',
         ),
         backgroundColor: Colors.green,
         duration: const Duration(seconds: 5),
       ),
     );
 
-    // Điều hướng về Trang chủ và xóa hết lịch sử
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 

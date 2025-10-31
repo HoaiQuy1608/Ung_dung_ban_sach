@@ -4,6 +4,7 @@ import 'package:ungdungbansach/models/user.dart';
 import '../providers/auth_provider.dart';
 import 'login_screen.dart';
 import 'wishlist_screen.dart';
+import 'order_history_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -131,7 +132,11 @@ class ProfileScreen extends StatelessWidget {
             leading: const Icon(Icons.receipt_long_outlined),
             title: const Text('Đơn hàng của tôi'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const OrderHistoryScreen()),
+              );
+            },
           ),
           ListTile(
             leading: const Icon(Icons.favorite_border),
