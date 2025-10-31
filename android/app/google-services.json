@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "1011733861517",
+    "firebase_url": "https://book-store-app-66820-default-rtdb.firebaseio.com",
+    "project_id": "book-store-app-66820",
+    "storage_bucket": "book-store-app-66820.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1011733861517:android:d0a53a1235263fb239fec4",
+        "android_client_info": {
+          "package_name": "com.example.ungdungbansach"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2VH5sS0L9LG_kDkgDQ7a8Vo2fQQWyZks"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
