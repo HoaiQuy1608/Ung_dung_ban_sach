@@ -38,43 +38,59 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  void _placeOrder() {
+  bool _isProcessing = false;
+
+  Future<void> _placeOrder() async {
     if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isProcessing = true;
+    });
 
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     final orderProvider = Provider.of<OrderProvider>(context, listen: false);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final double total = widget.itemsToBuy.fold(
-      0,
-      (sum, item) => sum + (item.book.price * item.quantity),
-    );
-    final String formattedTotal = cartProvider.formatPrice(_total);
-    final String actualUserId = authProvider.currentUser!.email;
 
-    orderProvider.addOrder(
-      userId: actualUserId,
-      name: _nameController.text,
-      phone: _phoneController.text,
-      address: _addressController.text,
-      totalAmount: total,
-      items: widget.itemsToBuy,
-    );
+    final String actualUserId = authProvider.currentUser!.id;
 
-    if (widget.source == CheckoutSource.cart) {
-      cartProvider.clearCart();
-    }
+    await Future.delayed(const Duration(seconds: 2));
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Đặt hàng thành công! Đơn hàng trị giá $formattedTotal đã được giao đến ${_addressController.text}.',
+    try {
+      await orderProvider.addOrder(
+        userId: actualUserId,
+        totalAmount: _total,
+        items: widget.itemsToBuy,
+        name: _nameController.text,
+        phone: _phoneController.text,
+        address: _addressController.text,
+      );
+      if (widget.source == CheckoutSource.cart) {
+        cartProvider.clearCart();
+      }
+
+      setState(() {
+        _isProcessing = false;
+      });
+
+      final fomattedTotal = cartProvider.formatPrice(_total);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đặt hàng thành công! Đơn hàng trị giá $fomattedTotal'),
+          backgroundColor: Colors.green,
         ),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 5),
-      ),
-    );
-
-    Navigator.of(context).popUntil((route) => route.isFirst);
+      );
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } catch (e) {
+      setState(() {
+        _isProcessing = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đặt hàng thất bại: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -145,9 +161,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 const SizedBox(height: 40),
 
                 ElevatedButton.icon(
-                  onPressed: _placeOrder,
-                  icon: const Icon(Icons.check_circle_outline),
-                  label: Text('Xác nhận đặt hàng $formattedTotal'),
+                  onPressed: _isProcessing ? null : _placeOrder,
+                  icon: _isProcessing
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Icon(Icons.check_circle_outline),
+                  label: Text(
+                    _isProcessing
+                        ? 'Đang xử lý...'
+                        : 'Xác nhận đặt hàng $formattedTotal',
+                  ),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     backgroundColor: Colors.teal,
