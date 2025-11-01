@@ -32,43 +32,60 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
     return null;
   }
+Future<void> _handleRegister() async {
+  setState(() {
+    _errorMessage = null;
+  });
 
-  void _handleRegister() {
-    setState(() {
-      _errorMessage = null;
-    });
+  if (!_formKey.currentState!.validate()) return;
 
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+  final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  // Hiển thị loading khi đang xử lý
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(child: CircularProgressIndicator()),
+  );
 
-    final success = authProvider.register(
+  try {
+    final success = await authProvider.register(
       _emailController.text.trim(),
-      _passwordController.text,
+      _passwordController.text.trim(),
     );
 
+    Navigator.of(context).pop(); // Đóng loading
+
     if (success) {
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Đăng ký thành công! Vui lòng đăng nhập.',
-            style: GoogleFonts.roboto(),
+      // Thành công → quay lại màn hình đăng nhập
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Đăng ký thành công! Vui lòng đăng nhập.',
+              style: GoogleFonts.roboto(),
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
           ),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+        );
+      }
     } else {
+      // Email trùng hoặc lỗi Firebase
       setState(() {
         _errorMessage =
             'Email đã tồn tại hoặc không hợp lệ. Vui lòng chọn email khác.';
       });
     }
+  } catch (e) {
+    Navigator.of(context).pop(); // Đóng loading
+    setState(() {
+      _errorMessage = 'Đã xảy ra lỗi khi đăng ký: $e';
+    });
   }
-
+}
+  
   @override
   void dispose() {
     _emailController.dispose();

@@ -62,29 +62,39 @@ class _HomeScreenState extends State<HomeScreen> {
 
           const double safeAspectRatio = 0.55;
 
-          return GridView.builder(
-            padding: const EdgeInsets.all(12.0),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: safeAspectRatio,
-            ),
-            itemCount: bookService.books.length,
-            itemBuilder: (context, index) {
-              final book = bookService.books[index];
-              return BookCard(
-                book: book,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => BookDetailScreen(book: book),
-                    ),
-                  );
-                },
+          if (bookService.isLoading) {
+  return const Center(child: CircularProgressIndicator());
+}
+
+      if (bookService.books.isEmpty) {
+        return const Center(child: Text('Không có sách nào trong hệ thống.'));
+      }
+
+      return GridView.builder(
+        key: const PageStorageKey('homeGrid'),
+        padding: const EdgeInsets.all(12.0),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: safeAspectRatio,
+        ),
+        itemCount: bookService.books.length,
+        itemBuilder: (context, index) {
+          final book = bookService.books[index];
+          return BookCard(
+            book: book,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => BookDetailScreen(book: book),
+                ),
               );
             },
           );
+        },
+      );
+
         },
       ),
       // Các màn hình con (Giữ nguyên)

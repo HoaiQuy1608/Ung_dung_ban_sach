@@ -1,65 +1,80 @@
 import 'package:flutter/foundation.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:uuid/uuid.dart';
 import 'package:ungdungbansach/models/user.dart';
 
 class AuthProvider extends ChangeNotifier {
-  static const User _adminUser = User(
+  static final _database = FirebaseDatabase.instance.ref();
+  static const _uuid = Uuid();
+
+  static final User _adminUser = User(
+    id: 'admin-id',
     email: 'admin@book.com',
     password: 'admin123',
     role: UserRole.admin,
   );
 
-  final List<User> _users = [];
-
   User? _currentUser;
-
+  User? get currentUser => _currentUser;
   bool get isAuthenticated => _currentUser != null;
-
   bool get isAdmin => _currentUser?.role == UserRole.admin;
 
-  User? get currentUser => _currentUser;
+  /// --- Đăng ký ---
+  Future<bool> register(String email, String password) async {
+    final usersRef = _database.child('users');
 
-  // --- Chức năng ĐĂNG KÝ (Không đổi) ---
-  bool register(String email, String password) {
-    if (email == _adminUser.email) return false;
-    if (_users.any((user) => user.email == email)) {
-      return false;
-    }
+    // Kiểm tra email đã tồn tại chưa
+    final snapshot = await usersRef
+        .orderByChild('email')
+        .equalTo(email)
+        .get();
 
-    final newUser = User(email: email, password: password, role: UserRole.user);
-    _users.add(newUser);
+    if (snapshot.exists) return false;
 
+    final id = _uuid.v4();
+    final newUser = User(
+      id: id,
+      email: email,
+      password: password,
+      role: UserRole.user,
+    );
+
+    await usersRef.child(id).set(newUser.toMap());
     return true;
   }
 
-  // --- Chức năng ĐĂNG NHẬP (Không đổi) ---
-  bool login(String email, String password) {
-    // 1. Kiểm tra tài khoản Admin trước
+  /// --- Đăng nhập ---
+  Future<bool> login(String email, String password) async {
+    // Kiểm tra admin
     if (email == _adminUser.email && password == _adminUser.password) {
       _currentUser = _adminUser;
       notifyListeners();
       return true;
     }
 
-    // 2. Tìm trong danh sách User thường bằng vòng lặp FOR
-    User? foundUser;
-    for (final user in _users) {
-      if (user.email == email && user.password == password) {
-        foundUser = user;
-        break;
+    final usersRef = _database.child('users');
+    final snapshot = await usersRef
+        .orderByChild('email')
+        .equalTo(email)
+        .get();
+
+    if (snapshot.exists) {
+      final userMap = Map<String, dynamic>.from(
+        (snapshot.children.first.value as Map),
+      );
+
+      final user = User.fromMap(userMap);
+
+      if (user.password == password) {
+        _currentUser = user;
+        notifyListeners();
+        return true;
       }
     }
 
-    // 3. Đăng nhập nếu tìm thấy
-    if (foundUser != null) {
-      _currentUser = foundUser;
-      notifyListeners();
-      return true;
-    }
-
-    return false; // Đăng nhập thất bại
+    return false;
   }
 
-  // --- Chức năng ĐĂNG XUẤT (Không đổi) ---
   void logout() {
     _currentUser = null;
     notifyListeners();

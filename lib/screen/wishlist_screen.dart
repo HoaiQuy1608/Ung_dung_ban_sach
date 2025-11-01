@@ -47,7 +47,7 @@ class WishlistScreen extends StatelessWidget {
                   key: ValueKey(book.id),
                   direction: DismissDirection.endToStart,
                   onDismissed: (direction) {
-                    bookProvider.toggleFavoriteStatus(book.id);
+                    //bookProvider.toggleFavoriteStatus(book.id);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
@@ -87,7 +87,7 @@ class WishlistScreen extends StatelessWidget {
                       trailing: IconButton(
                         icon: const Icon(Icons.favorite, color: Colors.red),
                         onPressed: () {
-                          bookProvider.toggleFavoriteStatus(book.id);
+                          //bookProvider.toggleFavoriteStatus(book.id);
                         },
                       ),
                       onTap: () {

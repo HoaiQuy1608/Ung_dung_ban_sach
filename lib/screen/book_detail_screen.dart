@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,8 +8,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../providers/auth_provider.dart';
 import '../providers/cart_provider.dart';
 import '../providers/book_service.dart';
-import 'package:ungdungbansach/models/book_model.dart';
-import 'package:ungdungbansach/models/cart_model.dart';
+import '../models/book_model.dart';
+import '../models/cart_model.dart';
 import 'checkout_screen.dart';
 
 class BookDetailScreen extends StatelessWidget {
@@ -21,11 +23,7 @@ class BookDetailScreen extends StatelessWidget {
     }
   }
 
-  void _addToCart(
-    BuildContext context,
-    AuthProvider authProvider,
-    CartProvider cartProvider,
-  ) {
+  void _addToCart(BuildContext context, AuthProvider authProvider, CartProvider cartProvider) {
     if (!authProvider.isAuthenticated) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -35,9 +33,7 @@ class BookDetailScreen extends StatelessWidget {
       );
       return;
     }
-
     cartProvider.addItem(book);
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Đã thêm "${book.title}" vào giỏ hàng.'),
@@ -56,32 +52,13 @@ class BookDetailScreen extends StatelessWidget {
       );
       return;
     }
-
     final tempItem = CartItem(book: book, quantity: 1);
-
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => CheckoutScreen(
+        builder: (_) => CheckoutScreen(
           itemsToBuy: [tempItem],
           source: CheckoutSource.quickBuy,
         ),
-      ),
-    );
-  }
-
-  void _toggleFavorite(BuildContext context, BookService bookProvider) {
-    final currentBook = bookProvider.books.firstWhere((b) => b.id == book.id);
-
-    bookProvider.toggleFavoriteStatus(book.id);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          currentBook.isFavorite
-              ? 'Đã bỏ yêu thích ${book.title}'
-              : 'Đã thêm ${book.title} vào danh sách yêu thích',
-        ),
-        duration: const Duration(seconds: 1),
       ),
     );
   }
@@ -93,11 +70,17 @@ class BookDetailScreen extends StatelessWidget {
     final formattedPrice = cartProvider.formatPrice(book.price);
 
     return Consumer<BookService>(
-      builder: (context, bookProvider, child) {
-        final currentBook = bookProvider.books.firstWhere(
-          (b) => b.id == book.id,
-        );
+      builder: (context, bookProvider, _) {
+        final currentBook = bookProvider.books.firstWhere((b) => b.id == book.id);
         final isFav = currentBook.isFavorite;
+
+        // Decode Base64
+        Uint8List? imageBytes;
+        try {
+          imageBytes = base64Decode(currentBook.imageBase64);
+        } catch (_) {
+          imageBytes = null;
+        }
 
         return Scaffold(
           appBar: AppBar(
@@ -110,7 +93,19 @@ class BookDetailScreen extends StatelessWidget {
                   isFav ? Icons.favorite : Icons.favorite_border,
                   color: isFav ? Colors.redAccent : Colors.white,
                 ),
-                onPressed: () => _toggleFavorite(context, bookProvider),
+                onPressed: () async {
+                  await bookProvider.toggleFavorite(currentBook.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        isFav
+                            ? 'Đã bỏ yêu thích ${book.title}'
+                            : 'Đã thêm ${book.title} vào danh sách yêu thích',
+                      ),
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -118,6 +113,7 @@ class BookDetailScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Ảnh bìa
                 Container(
                   padding: const EdgeInsets.all(20),
                   color: Colors.teal.shade50,
@@ -127,27 +123,26 @@ class BookDetailScreen extends StatelessWidget {
                       tag: 'book-${book.id}',
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          book.imageBase64
-                              .replaceAll('w=150', 'w=300')
-                              .replaceAll('h=200', 'h=400'),
-                          height: 350,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
+                        child: imageBytes != null
+                            ? Image.memory(
+                                imageBytes,
+                                height: 350,
+                                fit: BoxFit.cover,
+                              )
+                            : Container(
                                 height: 350,
                                 width: 250,
                                 color: Colors.grey.shade300,
                                 child: const Center(child: Text('Lỗi tải ảnh')),
                               ),
-                        ),
                       ),
                     ),
                   ),
                 ),
 
+                // Thông tin sách
                 Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -242,23 +237,13 @@ class BookDetailScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () =>
-                        _addToCart(context, authProvider, cartProvider),
-                    icon: const Icon(
-                      Icons.shopping_cart,
-                      size: 24,
-                      color: Colors.deepOrange,
-                    ),
-                    label: const Text(
-                      'Thêm vào giỏ',
-                      style: TextStyle(color: Colors.deepOrange),
-                    ),
+                    onPressed: () => _addToCart(context, authProvider, cartProvider),
+                    icon: const Icon(Icons.shopping_cart, size: 24, color: Colors.deepOrange),
+                    label: const Text('Thêm vào giỏ', style: TextStyle(color: Colors.deepOrange)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       side: const BorderSide(color: Colors.deepOrange),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                 ),
@@ -266,23 +251,14 @@ class BookDetailScreen extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () => _buyNow(context, authProvider),
-                    icon: const Icon(
-                      Icons.payment,
-                      size: 24,
-                      color: Colors.white,
-                    ),
+                    icon: const Icon(Icons.payment, size: 24, color: Colors.white),
                     label: const Text('MUA NGAY'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.teal,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 15),
-                      textStyle: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                      textStyle: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                 ),

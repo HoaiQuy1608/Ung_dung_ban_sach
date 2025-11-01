@@ -1,7 +1,8 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ungdungbansach/models/book_model.dart';
+import '../models/book_model.dart';
 
 class BookCard extends StatelessWidget {
   final Book book;
@@ -11,6 +12,14 @@ class BookCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+
+    Uint8List? imageBytes;
+    try {
+      imageBytes = base64Decode(book.imageBase64);
+    } catch (e) {
+      imageBytes = null; // Nếu Base64 không hợp lệ
+    }
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -21,36 +30,28 @@ class BookCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Ảnh bìa sách (Giữ nguyên)
+            // 1. Ảnh bìa sách
             AspectRatio(
               aspectRatio: 3 / 4,
-              child: CachedNetworkImage(
-                imageUrl: book.imageBase64,
-                fit: BoxFit.cover,
-                placeholder: (context, _) => Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: colorScheme.primary,
-                  ),
-                ),
-                errorWidget: (context, _, __) => Container(
-                  color: Colors.grey.shade300,
-                  child: const Icon(
-                    Icons.broken_image,
-                    size: 40,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
+              child: imageBytes != null
+                  ? Image.memory(
+                      imageBytes,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                    )
+                  : Container(
+                      color: Colors.grey.shade300,
+                      child: const Icon(
+                        Icons.broken_image,
+                        size: 40,
+                        color: Colors.grey,
+                      ),
+                    ),
             ),
 
-            // 2. Thông tin sách (GIẢM KHOẢNG CÁCH TỐI ĐA)
-            // Giảm padding ngang/dọc
+            // 2. Thông tin sách
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 5.0,
-                vertical: 3.0,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 3.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -64,7 +65,7 @@ class BookCard extends StatelessWidget {
                       color: colorScheme.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 1), // KHOẢNG CÁCH TỐI THIỂU
+                  const SizedBox(height: 1),
                   Text(
                     book.author,
                     maxLines: 1,
@@ -74,8 +75,7 @@ class BookCard extends StatelessWidget {
                       color: Colors.grey.shade600,
                     ),
                   ),
-                  const SizedBox(height: 3), // KHOẢNG CÁCH TỐI THIỂU
-                  // Giá và Đánh giá
+                  const SizedBox(height: 3),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

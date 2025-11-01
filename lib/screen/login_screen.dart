@@ -19,37 +19,53 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _errorMessage;
   bool _isPasswordVisible = false;
 
-  void _handleLogin() {
-    setState(() {
-      _errorMessage = null;
-    });
+  Future<void> _handleLogin() async {
+  setState(() {
+    _errorMessage = null;
+  });
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    final success = authProvider.login(
+  // Hiển thị loading
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(child: CircularProgressIndicator()),
+  );
+
+  try {
+    final success = await authProvider.login(
       _emailController.text.trim(),
       _passwordController.text,
     );
 
+    Navigator.of(context).pop(); // Đóng loading
+
     if (success) {
       if (authProvider.isAdmin) {
-        // 1. Nếu là ADMIN, chuyển thẳng đến AdminDashboardScreen
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
-          (Route<dynamic> route) => false,
+          MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+          (_) => false,
         );
       } else {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-          (Route<dynamic> route) => false,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          (_) => false,
         );
       }
     } else {
       setState(() {
-        _errorMessage = 'Email hoặc Mật khẩu không đúng. Vui lòng thử lại.';
+        _errorMessage = 'Email hoặc mật khẩu không đúng.';
       });
     }
+  } catch (e) {
+    Navigator.of(context).pop();
+    setState(() {
+      _errorMessage = 'Đã xảy ra lỗi khi đăng nhập: $e';
+    });
   }
+}
+
 
   @override
   void dispose() {

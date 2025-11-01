@@ -1,89 +1,106 @@
-import 'package:flutter/material.dart';
-import 'package:ungdungbansach/models/book_model.dart';
+import 'package:flutter/foundation.dart';
+import 'package:firebase_database/firebase_database.dart';
+import '../models/book_model.dart';
 
 class BookService extends ChangeNotifier {
-  final List<Book> _books = [
-    Book(
-      id: 'b1',
-      title: 'Nhà Giả Kim',
-      author: 'Paulo Coelho',
-      genre: 'Fiction',
-      imageBase64:
-          'https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=150&h=200&fit=crop',
-      price: 99000,
-      description:
-          'Tiểu thuyết kinh điển về hành trình theo đuổi ước mơ. Đã bán hàng triệu bản trên toàn thế giới.',
-      rating: 4.8,
-    ),
-    Book(
-      id: 'b2',
-      title: 'Đắc Nhân Tâm',
-      author: 'Dale Carnegie',
-      genre: 'Business',
-      imageBase64:
-          'https://images.unsplash.com/photo-1592496431122-2349e0fbc666?q=80&w=150&h=200&fit=crop',
-      price: 120000,
-      description:
-          'Tuyệt tác nghệ thuật đối nhân xử thế, giúp bạn thành công trong giao tiếp và cuộc sống.',
-      rating: 4.9,
-    ),
-    Book(
-      id: 'b3',
-      title: 'Tư Duy Nhanh và Chậm',
-      author: 'Daniel Kahneman',
-      genre: 'Business',
-      imageBase64:
-          'https://images.unsplash.com/photo-1589998059171-988d880ad7d6?q=80&w=150&h=200&fit=crop',
-      price: 185000,
-      description:
-          'Khám phá hai hệ thống chi phối cách chúng ta suy nghĩ, từ người đạt giải Nobel Kinh tế.',
-      rating: 4.7,
-    ),
-    Book(
-      id: 'b4',
-      title: '7 Thói Quen Của Người Thành Đạt',
-      author: 'Stephen Covey',
-      genre: 'Business',
-      imageBase64:
-          'https://images.unsplash.com/photo-1550794537-88da1e21b767?q=80&w=150&h=200&fit=crop',
-      price: 150000,
-      description:
-          'Cẩm nang xây dựng nhân cách và hiệu suất cá nhân đỉnh cao.',
-      rating: 4.6,
-    ),
-  ];
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref().child('books');
 
-  bool _isLoading = true;
+  final List<Book> _books = [];
+  bool _isLoading = false;
 
   bool get isLoading => _isLoading;
-  List<Book> get books => [..._books];
+  List<Book> get books => List.unmodifiable(_books);
 
-  /// Giả lập quá trình load dữ liệu (vd: từ Firebase)
+  /// ✅ Lấy danh sách sách từ Firebase Realtime Database
   Future<void> fetchBooks() async {
-    _isLoading = true;
-    notifyListeners();
+    try {
+      _isLoading = true;
+      notifyListeners();
 
-    // Giả lập độ trễ khi load dữ liệu
-    await Future.delayed(const Duration(seconds: 2));
-
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  /// Đảo trạng thái yêu thích của sách
-  void toggleFavoriteStatus(String bookId) {
-    final index = _books.indexWhere((book) => book.id == bookId);
-    if (index >= 0) {
-      final existingBook = _books[index];
-      _books[index] = existingBook.copyWith(
-        isFavorite: !existingBook.isFavorite,
-      );
+      final snapshot = await _dbRef.get();
+      if (snapshot.exists && snapshot.value != null) {
+        final data = Map<String, dynamic>.from(snapshot.value as Map);
+        _books
+          ..clear()
+          ..addAll(data.entries.map((e) {
+            final id = e.key.toString();
+            final json = Map<String, dynamic>.from(e.value);
+            return Book.fromJson(id, json);
+          }));
+      } else {
+        _books.clear();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('⚠️ Lỗi khi tải sách từ Firebase: $e');
+      }
+      _books.clear();
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }
 
-  /// Danh sách sách yêu thích
-  List<Book> get favoriteBooks {
-    return _books.where((book) => book.isFavorite).toList();
+  /// ✅ Đảo trạng thái yêu thích và cập nhật trực tiếp lên Firebase
+  Future<void> toggleFavorite(String bookId) async {
+    final index = _books.indexWhere((book) => book.id == bookId);
+    if (index == -1) return;
+
+    final current = _books[index];
+    final newStatus = !current.isFavorite;
+    _books[index] = current.copyWith(isFavorite: newStatus);
+    notifyListeners();
+
+    try {
+      await _dbRef.child(bookId).update({'isFavorite': newStatus});
+    } catch (e) {
+      if (kDebugMode) print('⚠️ Lỗi cập nhật favorite: $e');
+      // Nếu thất bại, rollback lại
+      _books[index] = current;
+      notifyListeners();
+    }
+  }
+
+  /// ✅ Lấy danh sách sách yêu thích
+  List<Book> get favoriteBooks =>
+      _books.where((book) => book.isFavorite).toList();
+
+  /// ✅ Thêm sách mới vào Firebase
+  Future<void> addBook(Book book) async {
+    try {
+      await _dbRef.child(book.id).set(book.toJson());
+      _books.add(book);
+      notifyListeners();
+    } catch (e) {
+      if (kDebugMode) print('⚠️ Lỗi thêm sách: $e');
+    }
+  }
+
+  /// ✅ Cập nhật sách hiện có
+  Future<void> updateBook(Book book) async {
+    final index = _books.indexWhere((b) => b.id == book.id);
+    if (index == -1) return;
+
+    try {
+      await _dbRef.child(book.id).update(book.toJson());
+      _books[index] = book;
+      notifyListeners();
+    } catch (e) {
+      if (kDebugMode) print('⚠️ Lỗi cập nhật sách: $e');
+    }
+  }
+
+  /// ✅ Xóa sách
+  Future<void> deleteBook(String bookId) async {
+    final index = _books.indexWhere((b) => b.id == bookId);
+    if (index == -1) return;
+
+    try {
+      await _dbRef.child(bookId).remove();
+      _books.removeAt(index);
+      notifyListeners();
+    } catch (e) {
+      if (kDebugMode) print('⚠️ Lỗi xóa sách: $e');
+    }
   }
 }
