@@ -32,6 +32,25 @@ class OrderProvider with ChangeNotifier {
     });
   }
 
+  void fetchAllOrders() {
+    _ordersRef.onValue.listen((event) {
+      final snapshot = event.snapshot;
+      if (snapshot.exists && snapshot.value != null) {
+        final data = snapshot.value as Map<dynamic, dynamic>;
+        final List<Order> loadedOrders = [];
+        data.forEach((key, orderData) {
+          final orderSnapshot = snapshot.child(key);
+          loadedOrders.add(Order.fromSnapshot(orderSnapshot));
+        });
+        loadedOrders.sort((a, b) => b.orderDate.compareTo(a.orderDate));
+        _orders = loadedOrders;
+      } else {
+        _orders = [];
+      }
+      notifyListeners();
+    });
+  }
+
   Future<void> addOrder({
     required String userId,
     required double totalAmount,

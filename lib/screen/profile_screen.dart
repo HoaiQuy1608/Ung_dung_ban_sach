@@ -4,12 +4,11 @@ import 'package:ungdungbansach/models/user.dart';
 import '../providers/auth_provider.dart';
 import 'login_screen.dart';
 import 'wishlist_screen.dart';
-import 'order_history_screen.dart';
+import './shared/purchase_history_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
-  // Widget hiển thị khi người dùng CHƯA đăng nhập
   Widget _buildLoginPrompt(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
 
@@ -58,7 +57,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // Hàm xử lý Đăng xuất và thêm HỘP THOẠI XÁC NHẬN
   void _handleLogout(BuildContext context, AuthProvider authProvider) async {
     final bool? shouldLogout = await showDialog<bool>(
       context: context,
@@ -88,7 +86,6 @@ class ProfileScreen extends StatelessWidget {
     }
   }
 
-  // Widget hiển thị thông tin cá nhân (Đã đăng nhập)
   Widget _buildUserInfoSection(
     BuildContext context,
     User user,
@@ -126,15 +123,15 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           const Divider(),
-
-          // 2. Các Chức năng chính
           ListTile(
             leading: const Icon(Icons.receipt_long_outlined),
             title: const Text('Đơn hàng của tôi'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const OrderHistoryScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const PurchaseHistoryScreen(),
+                ),
               );
             },
           ),
@@ -155,8 +152,6 @@ class ProfileScreen extends StatelessWidget {
             onTap: () {},
           ),
           const SizedBox(height: 20),
-
-          // 3. Nút Đăng xuất
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text('Đăng xuất'),
@@ -179,8 +174,6 @@ class ProfileScreen extends StatelessWidget {
             preferredSize: const Size.fromHeight(0),
             child: AppBar(title: const SizedBox()),
           ),
-
-          // BODY
           body: SingleChildScrollView(
             child: isAuthenticated
                 ? _buildUserInfoSection(context, user!, authProvider)

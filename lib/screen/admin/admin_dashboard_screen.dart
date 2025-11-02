@@ -26,7 +26,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       DashboardHome(),
       BookManagementScreen(),
       AdminCategory(),
-      PurchaseHistoryScreen(),
+      PurchaseHistoryScreen(isAdmin: true),
     ];
   }
 
