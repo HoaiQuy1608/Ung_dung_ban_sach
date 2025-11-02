@@ -63,38 +63,39 @@ class _HomeScreenState extends State<HomeScreen> {
           const double safeAspectRatio = 0.55;
 
           if (bookService.isLoading) {
-  return const Center(child: CircularProgressIndicator());
-}
+            return const Center(child: CircularProgressIndicator());
+          }
 
-      if (bookService.books.isEmpty) {
-        return const Center(child: Text('Không có sách nào trong hệ thống.'));
-      }
+          if (bookService.books.isEmpty) {
+            return const Center(
+              child: Text('Không có sách nào trong hệ thống.'),
+            );
+          }
 
-      return GridView.builder(
-        key: const PageStorageKey('homeGrid'),
-        padding: const EdgeInsets.all(12.0),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: safeAspectRatio,
-        ),
-        itemCount: bookService.books.length,
-        itemBuilder: (context, index) {
-          final book = bookService.books[index];
-          return BookCard(
-            book: book,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => BookDetailScreen(book: book),
-                ),
+          return GridView.builder(
+            key: const PageStorageKey('homeGrid'),
+            padding: const EdgeInsets.all(12.0),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: safeAspectRatio,
+            ),
+            itemCount: bookService.books.length,
+            itemBuilder: (context, index) {
+              final book = bookService.books[index];
+              return BookCard(
+                book: book,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => BookDetailScreen(book: book),
+                    ),
+                  );
+                },
               );
             },
           );
-        },
-      );
-
         },
       ),
       // Các màn hình con (Giữ nguyên)
@@ -120,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: ConvexAppBar(
         initialActiveIndex: _currentIndex,
         backgroundColor: Theme.of(context).colorScheme.primary,
-        color: Colors.white70,
+        color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.7),
         activeColor: Theme.of(context).colorScheme.onPrimary,
         items: const [
           TabItem(icon: Icons.home, title: 'Home'),

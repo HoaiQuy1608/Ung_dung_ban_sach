@@ -20,52 +20,51 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
 
   Future<void> _handleLogin() async {
-  setState(() {
-    _errorMessage = null;
-  });
+    setState(() {
+      _errorMessage = null;
+    });
 
-  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-  // Hiển thị loading
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (_) => const Center(child: CircularProgressIndicator()),
-  );
-
-  try {
-    final success = await authProvider.login(
-      _emailController.text.trim(),
-      _passwordController.text,
+    // Hiển thị loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
     );
 
-    Navigator.of(context).pop(); // Đóng loading
+    try {
+      final success = await authProvider.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
 
-    if (success) {
-      if (authProvider.isAdmin) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
-          (_) => false,
-        );
+      Navigator.of(context).pop(); // Đóng loading
+
+      if (success) {
+        if (authProvider.isAdmin) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+            (_) => false,
+          );
+        } else {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+            (_) => false,
+          );
+        }
       } else {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-          (_) => false,
-        );
+        setState(() {
+          _errorMessage = 'Email hoặc mật khẩu không đúng.';
+        });
       }
-    } else {
+    } catch (e) {
+      Navigator.of(context).pop();
       setState(() {
-        _errorMessage = 'Email hoặc mật khẩu không đúng.';
+        _errorMessage = 'Đã xảy ra lỗi khi đăng nhập: $e';
       });
     }
-  } catch (e) {
-    Navigator.of(context).pop();
-    setState(() {
-      _errorMessage = 'Đã xảy ra lỗi khi đăng nhập: $e';
-    });
   }
-}
-
 
   @override
   void dispose() {
@@ -112,16 +111,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.red.shade100,
+                      color: colorScheme.errorContainer,
                       borderRadius: BorderRadius.circular(
                         12,
                       ), // Bo góc mềm mại hơn
-                      border: Border.all(color: Colors.red.shade300),
+                      border: Border.all(color: colorScheme.error),
                     ),
                     child: Text(
                       _errorMessage!,
                       style: TextStyle(
-                        color: Colors.red.shade700,
+                        color: colorScheme.onErrorContainer,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

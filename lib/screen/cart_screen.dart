@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:ungdungbansach/widgets/cart_item_tile.dart';
 import 'package:ungdungbansach/providers/cart_provider.dart';
 import 'package:ungdungbansach/providers/auth_provider.dart';
+import 'package:ungdungbansach/utils/app_theme.dart';
 import 'checkout_screen.dart';
 
 class CartScreen extends StatelessWidget {
@@ -28,7 +29,6 @@ class CartScreen extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
                 child: const Text('Đặt hàng'),
               ),
             ],
@@ -49,7 +49,6 @@ class CartScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Vui lòng đăng nhập để tiến hành thanh toán.'),
-          backgroundColor: Colors.deepPurple,
         ),
       );
       return;
@@ -102,7 +101,7 @@ class CartScreen extends StatelessWidget {
                             Icon(
                               Icons.shopping_cart_outlined,
                               size: 80,
-                              color: Colors.grey,
+                              color: colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(height: 10),
                             Text(
@@ -147,7 +146,7 @@ class CartScreen extends StatelessWidget {
                   color: Theme.of(context).cardColor,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: colorScheme.shadow.withOpacity(0.1),
                       blurRadius: 12,
                       offset: const Offset(0, -4),
                     ),

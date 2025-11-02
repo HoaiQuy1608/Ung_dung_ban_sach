@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/book_model.dart';
+import '../utils/app_theme.dart';
 
 class BookCard extends StatelessWidget {
   final Book book;
@@ -40,11 +41,11 @@ class BookCard extends StatelessWidget {
                       width: double.infinity,
                     )
                   : Container(
-                      color: Colors.grey.shade300,
-                      child: const Icon(
+                      color: colorScheme.surfaceVariant,
+                      child: Icon(
                         Icons.broken_image,
                         size: 40,
-                        color: Colors.grey,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
             ),
@@ -72,7 +73,7 @@ class BookCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.nunito(
                       fontSize: 11,
-                      color: Colors.grey.shade600,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 3),
@@ -89,7 +90,7 @@ class BookCard extends StatelessWidget {
                       ),
                       Row(
                         children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 14),
+                          Icon(Icons.star, color: context.starColor, size: 14),
                           const SizedBox(width: 2),
                           Text(
                             book.rating.toStringAsFixed(1),
