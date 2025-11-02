@@ -3,9 +3,13 @@ import 'package:intl/intl.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../models/order.dart';
 import '../models/cart_model.dart';
+import '../models/notification_model.dart';
 
 class OrderProvider with ChangeNotifier {
   final DatabaseReference _ordersRef = FirebaseDatabase.instance.ref('orders');
+  final DatabaseReference _notificationsRef = FirebaseDatabase.instance.ref(
+    'notifications',
+  );
 
   List<Order> _orders = [];
   List<Order> get orders => _orders;
@@ -69,12 +73,20 @@ class OrderProvider with ChangeNotifier {
       address: address,
       orderDate: DateTime.now(),
     );
-
     try {
       await _ordersRef.push().set(newOrder.toMap());
+
+      final notification = NotificationItem(
+        id: '',
+        userId: userId,
+        iconType: 'success',
+        title: 'Đơn hàng đã được đặt thành công!',
+        message: 'Đơn hàng của bạn đã được xác nhận.',
+        time: DateTime.now(),
+      );
+      await _notificationsRef.push().set(notification.toMap());
     } catch (error) {
       print('Lỗi khi lưu đơn hàng: $error');
-      // Ném lỗi ra để UI (CheckoutScreen) bắt được
       rethrow;
     }
   }
