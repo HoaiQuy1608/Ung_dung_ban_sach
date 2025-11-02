@@ -5,6 +5,7 @@ import '../providers/auth_provider.dart';
 import 'login_screen.dart';
 import 'wishlist_screen.dart';
 import './shared/purchase_history_screen.dart';
+import './edit_profile_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -132,6 +133,17 @@ class ProfileScreen extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (_) => const PurchaseHistoryScreen(),
                 ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.edit_note_outlined),
+            title: const Text('Chỉnh sửa Hồ sơ'),
+            subtitle: const Text('Tên, SĐT, Địa chỉ'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const EditProfileScreen()),
               );
             },
           ),
