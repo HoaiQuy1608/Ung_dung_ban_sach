@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ungdungbansach/providers/auth_provider.dart';
+import 'package:ungdungbansach/utils/app_theme.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -66,7 +67,7 @@ Future<void> _handleRegister() async {
               'Đăng ký thành công! Vui lòng đăng nhập.',
               style: GoogleFonts.roboto(),
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.successGreen,
             duration: const Duration(seconds: 3),
           ),
         );
@@ -131,16 +132,16 @@ Future<void> _handleRegister() async {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.red.shade100,
+                        color: colorScheme.errorContainer,
                         borderRadius: BorderRadius.circular(
                           12,
                         ), // Bo góc mềm mại hơn
-                        border: Border.all(color: Colors.red.shade300),
+                        border: Border.all(color: colorScheme.error),
                       ),
                       child: Text(
                         _errorMessage!,
                         style: TextStyle(
-                          color: Colors.red.shade700,
+                          color: colorScheme.onErrorContainer,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

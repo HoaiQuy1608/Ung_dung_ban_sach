@@ -6,6 +6,7 @@ import 'login_screen.dart';
 import 'wishlist_screen.dart';
 import './shared/purchase_history_screen.dart';
 import './edit_profile_screen.dart';
+import 'settings_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -186,6 +187,12 @@ class ProfileScreen extends StatelessWidget {
               Navigator.of(context)
                   .push(MaterialPageRoute(builder: (_) => const WishlistScreen()));
             },
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings_outlined),
+            title: const Text('Cài đặt ứng dụng'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {},
           ),
           const SizedBox(height: 20),
           ListTile(

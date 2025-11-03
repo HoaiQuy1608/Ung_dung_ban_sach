@@ -1,12 +1,38 @@
+// wishlist_screen.dart
+import 'dart:convert'; // 👈 [SỬA] Thêm import để dùng base64Decode
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'book_detail_screen.dart';
 import 'package:ungdungbansach/providers/book_service.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:ungdungbansach/models/book_model.dart';
 
 class WishlistScreen extends StatelessWidget {
   const WishlistScreen({super.key});
+
+  // 🖼 [SỬA] Widget helper để hiển thị ảnh Base64
+  Widget _buildBookImage(String base64String) {
+    try {
+      final imageBytes = base64Decode(base64String);
+      return Image.memory(
+        imageBytes,
+        fit: BoxFit.cover,
+        width: 50,
+        height: 70,
+        errorBuilder: (context, error, stackTrace) => _imageError(),
+      );
+    } catch (e) {
+      return _imageError();
+    }
+  }
+
+  Widget _imageError() {
+    return Container(
+      width: 50,
+      height: 70,
+      color: Colors.grey[200],
+      child: const Icon(Icons.broken_image, color: Colors.grey),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +43,7 @@ class WishlistScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Sách Yêu Thích'), centerTitle: true),
       body: favoriteBooks.isEmpty
           ? Center(
+              // ... (Phần UI "trống" giữ nguyên, không đổi) ...
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -47,7 +74,8 @@ class WishlistScreen extends StatelessWidget {
                   key: ValueKey(book.id),
                   direction: DismissDirection.endToStart,
                   onDismissed: (direction) {
-                    //bookProvider.toggleFavoriteStatus(book.id);
+                    // ⭐️ [SỬA] Kích hoạt lại logic
+                    bookProvider.toggleFavorite(book.id); 
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
@@ -73,21 +101,16 @@ class WishlistScreen extends StatelessWidget {
                       leading: SizedBox(
                         width: 50,
                         height: 70,
-                        child: CachedNetworkImage(
-                          imageUrl: book.imageBase64,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) =>
-                              Container(color: Colors.grey[200]),
-                          errorWidget: (context, url, error) =>
-                              const Icon(Icons.broken_image),
-                        ),
+                        // 🖼 [SỬA] Thay CachedNetworkImage bằng widget helper
+                        child: _buildBookImage(book.imageBase64),
                       ),
                       title: Text(book.title),
                       subtitle: Text(book.author),
                       trailing: IconButton(
                         icon: const Icon(Icons.favorite, color: Colors.red),
                         onPressed: () {
-                          //bookProvider.toggleFavoriteStatus(book.id);
+                          // ⭐️ [SỬA] Kích hoạt lại logic
+                           bookProvider.toggleFavorite(book.id);
                         },
                       ),
                       onTap: () {

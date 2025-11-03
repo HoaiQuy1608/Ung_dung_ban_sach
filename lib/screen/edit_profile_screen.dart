@@ -19,11 +19,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Lấy user hiện tại
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final currentUser = authProvider.currentUser;
-
-    // Điền thông tin cũ vào các ô
     if (currentUser != null) {
       _nameController.text = currentUser.name;
       _phoneController.text = currentUser.phone;
@@ -39,7 +36,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  // Hàm xử lý LƯU
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -52,7 +48,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     try {
-      // Gọi hàm mới trong provider
       await authProvider.updateProfile(
         _nameController.text,
         _phoneController.text,

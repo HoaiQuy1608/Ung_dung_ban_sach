@@ -4,6 +4,7 @@ import '../providers/cart_provider.dart';
 import '../models/cart_model.dart';
 import '../providers/order_provider.dart';
 import '../providers/auth_provider.dart';
+import '../utils/app_theme.dart';
 
 enum CheckoutSource { cart, quickBuy }
 
@@ -28,17 +29,28 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _addressController = TextEditingController();
 
   double _total = 0;
+  bool _isProcessing = false;
 
   @override
   void initState() {
     super.initState();
+    // Tính tổng tiền
     _total = widget.itemsToBuy.fold(
       0,
       (sum, item) => sum + (item.book.price * item.quantity),
     );
-  }
+    
+    // ⭐️ [THÊM MỚI] Logic tự động điền thông tin
+    // Lấy thông tin user từ AuthProvider
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final currentUser = authProvider.currentUser;
 
-  bool _isProcessing = false;
+    if (currentUser != null) {
+      _nameController.text = currentUser.name;
+      _phoneController.text = currentUser.phone;
+      _addressController.text = currentUser.address;
+    }
+  }
 
   Future<void> _placeOrder() async {
     if (!_formKey.currentState!.validate()) return;
@@ -76,7 +88,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Đặt hàng thành công! Đơn hàng trị giá $fomattedTotal'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.successGreen,
         ),
       );
       Navigator.of(context).popUntil((route) => route.isFirst);
@@ -87,7 +99,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Đặt hàng thất bại: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
     }
@@ -107,6 +119,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       context,
       listen: false,
     ).formatPrice(_total);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Xác Nhận Đơn Hàng')),
@@ -120,10 +133,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               children: [
                 Text(
                   'Tổng tiền: $formattedTotal',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.red,
+                    color: colorScheme.tertiary,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -163,7 +176,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ElevatedButton.icon(
                   onPressed: _isProcessing ? null : _placeOrder,
                   icon: _isProcessing
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? CircularProgressIndicator(color: colorScheme.onPrimary)
                       : const Icon(Icons.check_circle_outline),
                   label: Text(
                     _isProcessing
@@ -172,8 +185,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 15),
-                    backgroundColor: Colors.teal,
-                    foregroundColor: Colors.white,
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
                   ),
                 ),
               ],

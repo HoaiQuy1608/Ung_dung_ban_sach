@@ -21,14 +21,18 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
 
   Future<void> _handleLogin() async {
-    setState(() => _errorMessage = null);
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  setState(() {
+    _errorMessage = null;
+  });
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
+  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+  // Hiển thị loading
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(child: CircularProgressIndicator()),
+  );
 
     try {
       final success = await authProvider.login(
@@ -36,55 +40,33 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text,
       );
 
-      Navigator.of(context).pop();
-
-      if (success) {
-        if (authProvider.isAdmin) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
-            (_) => false,
-          );
-        } else {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const HomeScreen()),
-            (_) => false,
-          );
-        }
-      } else {
-        setState(() => _errorMessage = 'Email hoặc mật khẩu không đúng.');
-      }
-    } catch (e) {
-      Navigator.of(context).pop();
-      setState(() => _errorMessage = 'Đã xảy ra lỗi khi đăng nhập: $e');
-    }
-  }
-
-  Future<void> _handleGoogleLogin() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-
-    final success = await authProvider.loginWithGoogle();
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(); // Đóng loading
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Đăng nhập bằng Google thành công!")),
-      );
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-        (_) => false,
-      );
+      if (authProvider.isAdmin) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+          (_) => false,
+        );
+      } else {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          (_) => false,
+        );
+      }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Đăng nhập Google thất bại!")),
-      );
+      setState(() {
+        _errorMessage = 'Email hoặc mật khẩu không đúng.';
+      });
     }
+  } catch (e) {
+    Navigator.of(context).pop();
+    setState(() {
+      _errorMessage = 'Đã xảy ra lỗi khi đăng nhập: $e';
+    });
   }
+}
+
 
   @override
   void dispose() {
@@ -125,13 +107,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: Colors.red.shade100,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(
+                        12,
+                      ), // Bo góc mềm mại hơn
                       border: Border.all(color: Colors.red.shade300),
                     ),
                     child: Text(
                       _errorMessage!,
                       style: TextStyle(
-                        color: Colors.red.shade700,
+                        color: colorScheme.onErrorContainer,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

@@ -10,6 +10,7 @@ import '../providers/cart_provider.dart';
 import '../providers/book_service.dart';
 import '../models/book_model.dart';
 import '../models/cart_model.dart';
+import '../utils/app_theme.dart';
 import 'checkout_screen.dart';
 
 class BookDetailScreen extends StatelessWidget {
@@ -26,9 +27,8 @@ class BookDetailScreen extends StatelessWidget {
   void _addToCart(BuildContext context, AuthProvider authProvider, CartProvider cartProvider) {
     if (!authProvider.isAuthenticated) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.'),
-          backgroundColor: Colors.deepPurple,
+        SnackBar(
+          content: const Text('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.'),
         ),
       );
       return;
@@ -47,7 +47,6 @@ class BookDetailScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Vui lòng đăng nhập để tiến hành mua hàng.'),
-          backgroundColor: Colors.deepPurple,
         ),
       );
       return;
@@ -82,16 +81,15 @@ class BookDetailScreen extends StatelessWidget {
           imageBytes = null;
         }
 
+        final colorScheme = Theme.of(context).colorScheme;
         return Scaffold(
           appBar: AppBar(
             title: Text(book.title, style: GoogleFonts.merriweather()),
-            backgroundColor: Colors.teal,
-            foregroundColor: Colors.white,
             actions: [
               IconButton(
                 icon: Icon(
                   isFav ? Icons.favorite : Icons.favorite_border,
-                  color: isFav ? Colors.redAccent : Colors.white,
+                  color: isFav ? colorScheme.error : colorScheme.onPrimary,
                 ),
                 onPressed: () async {
                   await bookProvider.toggleFavorite(currentBook.id);
@@ -116,7 +114,7 @@ class BookDetailScreen extends StatelessWidget {
                 // Ảnh bìa
                 Container(
                   padding: const EdgeInsets.all(20),
-                  color: Colors.teal.shade50,
+                  color: colorScheme.surfaceVariant,
                   width: double.infinity,
                   child: Center(
                     child: Hero(
@@ -132,8 +130,13 @@ class BookDetailScreen extends StatelessWidget {
                             : Container(
                                 height: 350,
                                 width: 250,
-                                color: Colors.grey.shade300,
-                                child: const Center(child: Text('Lỗi tải ảnh')),
+                                color: colorScheme.surfaceVariant,
+                                child: Center(
+                                  child: Text(
+                                    'Lỗi tải ảnh',
+                                    style: TextStyle(color: colorScheme.onSurfaceVariant),
+                                  ),
+                                ),
                               ),
                       ),
                     ),
@@ -151,13 +154,13 @@ class BookDetailScreen extends StatelessWidget {
                         style: GoogleFonts.playfairDisplay(
                           fontSize: 30,
                           fontWeight: FontWeight.bold,
-                          color: Colors.teal.shade800,
+                          color: colorScheme.primary,
                         ),
                       ),
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 20),
+                          Icon(Icons.star, color: context.starColor, size: 20),
                           const SizedBox(width: 5),
                           Text(
                             '${book.rating.toStringAsFixed(1)} / 5.0',
@@ -170,7 +173,7 @@ class BookDetailScreen extends StatelessWidget {
                               'Tác giả: ${book.author}',
                               style: GoogleFonts.roboto(
                                 fontSize: 16,
-                                color: Colors.blue.shade700,
+                                color: colorScheme.secondary,
                                 decoration: TextDecoration.underline,
                               ),
                             ),
@@ -193,7 +196,7 @@ class BookDetailScreen extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 34,
                           fontWeight: FontWeight.w900,
-                          color: Colors.red.shade600,
+                          color: colorScheme.tertiary,
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -204,7 +207,7 @@ class BookDetailScreen extends StatelessWidget {
                         style: GoogleFonts.playfairDisplay(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: Colors.teal.shade700,
+                          color: colorScheme.primary,
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -224,10 +227,10 @@ class BookDetailScreen extends StatelessWidget {
           bottomNavigationBar: Container(
             padding: const EdgeInsets.all(15),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
+                  color: colorScheme.shadow.withOpacity(0.1),
                   spreadRadius: 2,
                   blurRadius: 5,
                 ),
@@ -238,11 +241,11 @@ class BookDetailScreen extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _addToCart(context, authProvider, cartProvider),
-                    icon: const Icon(Icons.shopping_cart, size: 24, color: Colors.deepOrange),
-                    label: const Text('Thêm vào giỏ', style: TextStyle(color: Colors.deepOrange)),
+                    icon: Icon(Icons.shopping_cart, size: 24, color: colorScheme.tertiary),
+                    label: Text('Thêm vào giỏ', style: TextStyle(color: colorScheme.tertiary)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 15),
-                      side: const BorderSide(color: Colors.deepOrange),
+                      side: BorderSide(color: colorScheme.tertiary),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
@@ -251,11 +254,11 @@ class BookDetailScreen extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () => _buyNow(context, authProvider),
-                    icon: const Icon(Icons.payment, size: 24, color: Colors.white),
+                    icon: Icon(Icons.payment, size: 24, color: colorScheme.onPrimary),
                     label: const Text('MUA NGAY'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
-                      foregroundColor: Colors.white,
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       textStyle: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

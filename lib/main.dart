@@ -9,6 +9,8 @@ import 'package:ungdungbansach/providers/auth_provider.dart';
 import 'package:ungdungbansach/providers/book_service.dart';
 import 'package:ungdungbansach/providers/order_provider.dart';
 import 'package:ungdungbansach/providers/notification_provider.dart';
+import 'package:ungdungbansach/providers/theme_provider.dart';
+import 'package:ungdungbansach/utils/app_theme.dart';
 import 'package:ungdungbansach/screen/home_screen.dart';
 
 void main() async {
@@ -25,53 +27,32 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      // Đăng ký AuthProvider và BookService
       providers: [
         ChangeNotifierProvider(create: (context) => AuthProvider()),
         ChangeNotifierProvider(create: (context) => BookService()),
         ChangeNotifierProvider(create: (context) => CartProvider()),
         ChangeNotifierProvider(create: (context) => OrderProvider()),
         ChangeNotifierProvider(create: (context) => NotificationProvider()),
+        ChangeNotifierProvider(create: (context) => ThemeProvider()),
       ],
-      child: MaterialApp(
-        title: 'Bookify',
-        debugShowCheckedModeBanner: false,
-        theme: _buildTheme(Brightness.light),
-        builder: EasyLoading.init(),
-
-        home: const HomeScreen(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            title: 'Bookify',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme.copyWith(
+              textTheme: GoogleFonts.nunitoTextTheme(AppTheme.lightTheme.textTheme),
+            ),
+            darkTheme: AppTheme.darkTheme.copyWith(
+              textTheme: GoogleFonts.nunitoTextTheme(AppTheme.darkTheme.textTheme),
+            ),
+            themeMode: themeProvider.themeMode,
+            builder: EasyLoading.init(),
+            home: const HomeScreen(),
+          );
+        },
       ),
     );
   }
 }
 
-// Hàm theme không cần thay đổi logic bên trong
-ThemeData _buildTheme(Brightness brightness) {
-  final Color seed = const Color(0xFF6C63FF);
-  final Color accent = const Color(0xFFFFA500);
-  final ColorScheme baseScheme = ColorScheme.fromSeed(
-    seedColor: seed,
-    brightness: brightness,
-  ).copyWith(tertiary: accent);
-
-  final textTheme = GoogleFonts.nunitoTextTheme();
-
-  return ThemeData(
-    useMaterial3: true,
-    colorScheme: baseScheme,
-    textTheme: textTheme,
-    appBarTheme: AppBarTheme(
-      centerTitle: true,
-      backgroundColor: baseScheme.primary,
-      foregroundColor: baseScheme.onPrimary,
-    ),
-    scaffoldBackgroundColor: Colors.white, // ĐẢM BẢO MÀU TRẮNG
-    snackBarTheme: SnackBarThemeData(
-      backgroundColor: baseScheme.primary,
-      contentTextStyle: textTheme.bodyMedium?.copyWith(
-        color: baseScheme.onPrimary,
-      ),
-    ),
-    visualDensity: VisualDensity.adaptivePlatformDensity,
-  );
-}
