@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:ungdungbansach/providers/auth_provider.dart';
 import 'package:ungdungbansach/screen/register_screen.dart';
 import 'package:ungdungbansach/screen/admin/admin_dashboard_screen.dart';
@@ -20,52 +21,70 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
 
   Future<void> _handleLogin() async {
-  setState(() {
-    _errorMessage = null;
-  });
+    setState(() => _errorMessage = null);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-  final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
-  // Hiển thị loading
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (_) => const Center(child: CircularProgressIndicator()),
-  );
-
-  try {
-    final success = await authProvider.login(
-      _emailController.text.trim(),
-      _passwordController.text,
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
     );
 
-    Navigator.of(context).pop(); // Đóng loading
+    try {
+      final success = await authProvider.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
+      Navigator.of(context).pop();
+
+      if (success) {
+        if (authProvider.isAdmin) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+            (_) => false,
+          );
+        } else {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+            (_) => false,
+          );
+        }
+      } else {
+        setState(() => _errorMessage = 'Email hoặc mật khẩu không đúng.');
+      }
+    } catch (e) {
+      Navigator.of(context).pop();
+      setState(() => _errorMessage = 'Đã xảy ra lỗi khi đăng nhập: $e');
+    }
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final success = await authProvider.loginWithGoogle();
+    Navigator.of(context).pop();
 
     if (success) {
-      if (authProvider.isAdmin) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
-          (_) => false,
-        );
-      } else {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-          (_) => false,
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Đăng nhập bằng Google thành công!")),
+      );
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (_) => false,
+      );
     } else {
-      setState(() {
-        _errorMessage = 'Email hoặc mật khẩu không đúng.';
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Đăng nhập Google thất bại!")),
+      );
     }
-  } catch (e) {
-    Navigator.of(context).pop();
-    setState(() {
-      _errorMessage = 'Đã xảy ra lỗi khi đăng nhập: $e';
-    });
   }
-}
-
 
   @override
   void dispose() {
@@ -76,23 +95,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Lấy ColorScheme từ theme
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface, // Nền sáng
+      backgroundColor: colorScheme.surface,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(30.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              // Tiêu đề & Logo (Icon sách lớn)
-              Icon(
-                Icons.menu_book_rounded,
-                color: colorScheme.primary, // Dùng màu primary từ theme
-                size: 80,
-              ),
+              Icon(Icons.menu_book_rounded, color: colorScheme.primary, size: 80),
               const SizedBox(height: 10),
               Text(
                 'BOOKSTORE',
@@ -100,12 +113,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: GoogleFonts.merriweather(
                   fontSize: 34,
                   fontWeight: FontWeight.w900,
-                  color: colorScheme.primary, // Dùng màu primary từ theme
+                  color: colorScheme.primary,
                 ),
               ),
               const SizedBox(height: 50),
 
-              // Thông báo lỗi
               if (_errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20),
@@ -113,9 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: Colors.red.shade100,
-                      borderRadius: BorderRadius.circular(
-                        12,
-                      ), // Bo góc mềm mại hơn
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.red.shade300),
                     ),
                     child: Text(
@@ -128,82 +138,59 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-              // Trường Email
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   labelText: 'Email',
                   hintText: 'Nhập email của bạn',
-                  prefixIcon: Icon(
-                    Icons.email,
-                    color: colorScheme.secondary,
-                  ), // Màu secondary
+                  prefixIcon: Icon(Icons.email, color: colorScheme.secondary),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(
-                      12,
-                    ), // Bo góc mềm mại hơn
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    // Viền khi focus
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: colorScheme.primary,
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: colorScheme.primary, width: 2),
                   ),
                 ),
               ),
               const SizedBox(height: 20),
 
-              // Trường Mật khẩu
               TextField(
                 controller: _passwordController,
                 decoration: InputDecoration(
                   labelText: 'Mật khẩu',
                   hintText: 'Nhập mật khẩu',
-                  prefixIcon: Icon(
-                    Icons.lock,
-                    color: colorScheme.secondary,
-                  ), // Màu secondary
+                  prefixIcon: Icon(Icons.lock, color: colorScheme.secondary),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(
-                      12,
-                    ), // Bo góc mềm mại hơn
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: colorScheme.primary,
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: colorScheme.primary, width: 2),
                   ),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _isPasswordVisible
                           ? Icons.visibility
                           : Icons.visibility_off,
-                      color: colorScheme.onSurfaceVariant, // Màu icon
+                      color: colorScheme.onSurfaceVariant,
                     ),
                     onPressed: () {
-                      setState(() {
-                        _isPasswordVisible = !_isPasswordVisible;
-                      });
+                      setState(() => _isPasswordVisible = !_isPasswordVisible);
                     },
                   ),
                 ),
                 obscureText: !_isPasswordVisible,
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 30),
 
-              // Nút Đăng nhập
               ElevatedButton(
                 onPressed: _handleLogin,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 18),
-                  backgroundColor: colorScheme.primary, // Dùng màu primary
-                  foregroundColor:
-                      colorScheme.onPrimary, // Chữ trắng trên primary
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -217,15 +204,39 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
 
-              // Nút chuyển trang Đăng ký
+              const SizedBox(height: 20),
+              Text(
+                'hoặc',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 20),
+
+              // 🔹 Nút đăng nhập bằng Google
+              OutlinedButton.icon(
+                onPressed: _handleGoogleLogin,
+                icon: const FaIcon(FontAwesomeIcons.google, color: Colors.red),
+                label: const Text(
+                  'Đăng nhập bằng Google',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.black87,
+                  backgroundColor: Colors.white,
+                  side: const BorderSide(color: Colors.grey),
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 30),
               TextButton(
                 onPressed: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const RegisterScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const RegisterScreen()),
                   );
                 },
                 child: Text(
@@ -233,7 +244,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: GoogleFonts.inter(
                     color: colorScheme.secondary,
                     fontSize: 16,
-                  ), // Dùng màu secondary
+                  ),
                 ),
               ),
             ],

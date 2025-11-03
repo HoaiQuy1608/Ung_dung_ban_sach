@@ -13,7 +13,12 @@
           "package_name": "com.example.ungdungbansach"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1011733861517-jc46l4vpej9vureh5nq6ume23f7qs9o0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD2VH5sS0L9LG_kDkgDQ7a8Vo2fQQWyZks"
@@ -21,7 +26,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1011733861517-jc46l4vpej9vureh5nq6ume23f7qs9o0.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1011733861517-p0lgldmod2vbrq51t5v32fjefkjtrh94.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.ungdungbansach"
+              }
+            }
+          ]
         }
       }
     }

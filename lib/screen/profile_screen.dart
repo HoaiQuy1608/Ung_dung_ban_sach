@@ -37,6 +37,7 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 40),
 
+          // ✅ Nút đăng nhập thường
           ElevatedButton(
             onPressed: () {
               Navigator.of(
@@ -53,6 +54,29 @@ class ProfileScreen extends StatelessWidget {
             ),
             child: const Text('ĐĂNG NHẬP NGAY'),
           ),
+
+          const SizedBox(height: 16),
+
+          // ✅ Nút đăng nhập bằng Google
+          /*OutlinedButton.icon(
+            icon: Image.asset('assets/google_icon.png', height: 24), // nhớ thêm ảnh vào assets
+            label: const Text('Đăng nhập với Google'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              side: BorderSide(color: Colors.grey.shade400),
+            ),
+            onPressed: () async {
+              final authProvider =
+                  Provider.of<AuthProvider>(context, listen: false);
+              final success = await authProvider.loginWithGoogle();
+
+              if (success && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Đăng nhập Google thành công!')),
+                );
+              }
+            },
+          ),*/
         ],
       ),
     );
@@ -83,7 +107,7 @@ class ProfileScreen extends StatelessWidget {
     );
 
     if (shouldLogout == true) {
-      authProvider.logout();
+      await authProvider.logout();
     }
   }
 
@@ -111,10 +135,17 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Center(
             child: Text(
+              user.name.isNotEmpty ? user.name : 'Người dùng',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Center(
+            child: Text(
               user.role == UserRole.admin ? 'Quản trị viên' : 'Khách hàng',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),
@@ -152,16 +183,9 @@ class ProfileScreen extends StatelessWidget {
             title: const Text('Sách yêu thích'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const WishlistScreen()));
+              Navigator.of(context)
+                  .push(MaterialPageRoute(builder: (_) => const WishlistScreen()));
             },
-          ),
-          ListTile(
-            leading: const Icon(Icons.settings_outlined),
-            title: const Text('Cài đặt ứng dụng'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
           ),
           const SizedBox(height: 20),
           ListTile(
