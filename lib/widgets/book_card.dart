@@ -41,7 +41,7 @@ class BookCard extends StatelessWidget {
                       width: double.infinity,
                     )
                   : Container(
-                      color: colorScheme.surfaceContainerHighest,
+                      color: colorScheme.surfaceVariant,
                       child: Icon(
                         Icons.broken_image,
                         size: 40,
@@ -52,10 +52,7 @@ class BookCard extends StatelessWidget {
 
             // 2. Thông tin sách
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 5.0,
-                vertical: 3.0,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 3.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
