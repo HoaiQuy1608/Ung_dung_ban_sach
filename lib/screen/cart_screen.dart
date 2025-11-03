@@ -10,7 +10,7 @@ import 'checkout_screen.dart';
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
-  // Hộp thoại xác nhận đặt hàng (UX)
+  // Hộp thoại xác nhận đặt hàng
   Future<bool> _confirmCheckout(BuildContext context, double total) async {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     final String formattedTotal = cartProvider.formatPrice(total);
@@ -30,6 +30,31 @@ class CartScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
                 child: const Text('Đặt hàng'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  // Hộp thoại xác nhận xóa sản phẩm khỏi giỏ hàng
+  Future<bool> _confirmDelete(BuildContext context, String bookTitle) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Xác nhận Xóa'),
+            content: Text(
+              'Bạn có chắc chắn muốn xóa "$bookTitle" khỏi giỏ hàng không?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Hủy'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Xóa'),
               ),
             ],
           ),
@@ -77,7 +102,6 @@ class CartScreen extends StatelessWidget {
         final total = cartProvider.totalPrice;
 
         return Scaffold(
-          // APPBAR GỌN GÀNG NHẤT: Không có chiều cao, không có tiêu đề.
           appBar: PreferredSize(
             preferredSize: const Size.fromHeight(0),
             child: AppBar(
@@ -87,11 +111,6 @@ class CartScreen extends StatelessWidget {
           ),
           body: Column(
             children: [
-              // TIÊU ĐỀ ĐÃ ĐƯỢC XÓA Ở ĐÂY!
-              // Trước đó có một Padding chứa Row và Text('Giỏ Hàng...') đã bị xóa.
-
-              // 1. Danh sách sản phẩm
-              // Thêm padding cho nội dung để nó không bị dính vào Status Bar
               Expanded(
                 child: cartItems.isEmpty
                     ? Center(
@@ -132,14 +151,19 @@ class CartScreen extends StatelessWidget {
                                 cartProvider.decreaseQuantity(line.book.id);
                               }
                             },
-                            onDelete: () =>
-                                cartProvider.removeItem(line.book.id),
+                            onDelete: () async {
+                              final confirm = await _confirmDelete(
+                                context,
+                                line.book.title,
+                              );
+                              if (confirm) {
+                                cartProvider.removeItem(line.book.id);
+                              }
+                            },
                           );
                         },
                       ),
               ),
-
-              // 2. Khu vực Tổng tiền và Thanh toán
               Container(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                 decoration: BoxDecoration(
