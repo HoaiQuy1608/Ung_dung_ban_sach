@@ -8,6 +8,7 @@ class User {
   final String name;
   final String phone;
   final String address;
+  final Set<String> favorites; 
 
   const User({
     required this.id,
@@ -17,6 +18,7 @@ class User {
     this.name = '',
     this.phone = '',
     this.address = '',
+    this.favorites = const {},
   });
 
   Map<String, dynamic> toMap() => {
@@ -27,9 +29,12 @@ class User {
     'name': name,
     'phone': phone,
     'address': address,
+    'favorites': { for (var bookId in favorites) bookId: true },
   };
 
   factory User.fromMap(Map<String, dynamic> map) {
+    final favMap = Map<String, dynamic>.from(map['favorites'] ?? {});
+    final favSet = favMap.keys.toSet();
     return User(
       id: map['id'] ?? '',
       email: map['email'] ?? '',
@@ -38,6 +43,7 @@ class User {
       name: map['name'] ?? '',
       phone: map['phone'] ?? '',
       address: map['address'] ?? '',
+      favorites: favSet,
     );
   }
 
@@ -49,6 +55,7 @@ class User {
     String? name,
     String? phone,
     String? address,
+    Set<String>? favorites,
   }) {
     return User(
       id: id ?? this.id,
@@ -58,6 +65,7 @@ class User {
       name: name ?? this.name,
       phone: phone ?? this.phone,
       address: address ?? this.address,
+      favorites: favorites ?? this.favorites,
     );
   }
 }

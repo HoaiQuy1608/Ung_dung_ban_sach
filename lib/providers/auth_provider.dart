@@ -150,4 +150,14 @@ class AuthProvider extends ChangeNotifier {
       rethrow;
     }
   }
+
+  /// -----------------------------
+  /// 🔹 Cập nhật user hiện tại (ví dụ toggle favorite)
+  /// -----------------------------
+  void setCurrentUser(User updatedUser) {
+    _currentUser = updatedUser;
+    notifyListeners();
+  }
+
+  
 }

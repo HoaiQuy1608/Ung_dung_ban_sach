@@ -27,8 +27,8 @@ class BookDetailScreen extends StatelessWidget {
   void _addToCart(BuildContext context, AuthProvider authProvider, CartProvider cartProvider) {
     if (!authProvider.isAuthenticated) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.'),
+        const SnackBar(
+          content: Text('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.'),
         ),
       );
       return;
@@ -71,7 +71,7 @@ class BookDetailScreen extends StatelessWidget {
     return Consumer<BookService>(
       builder: (context, bookProvider, _) {
         final currentBook = bookProvider.books.firstWhere((b) => b.id == book.id);
-        final isFav = currentBook.isFavorite;
+        final colorScheme = Theme.of(context).colorScheme;
 
         // Decode Base64
         Uint8List? imageBytes;
@@ -81,32 +81,67 @@ class BookDetailScreen extends StatelessWidget {
           imageBytes = null;
         }
 
-        final colorScheme = Theme.of(context).colorScheme;
+        // Kiểm tra trạng thái favorite theo user hiện tại
+        final isFav = authProvider.isAuthenticated
+            ? authProvider.currentUser!.favorites.contains(currentBook.id)
+            : false;
+
         return Scaffold(
           appBar: AppBar(
-            title: Text(book.title, style: GoogleFonts.merriweather()),
-            actions: [
-              IconButton(
-                icon: Icon(
-                  isFav ? Icons.favorite : Icons.favorite_border,
-                  color: isFav ? colorScheme.error : colorScheme.onPrimary,
-                ),
-                onPressed: () async {
-                  await bookProvider.toggleFavorite(currentBook.id);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        isFav
-                            ? 'Đã bỏ yêu thích ${book.title}'
-                            : 'Đã thêm ${book.title} vào danh sách yêu thích',
-                      ),
-                      duration: const Duration(seconds: 1),
-                    ),
-                  );
-                },
-              ),
-            ],
+  title: Text(book.title, style: GoogleFonts.merriweather()),
+  actions: [
+    Consumer2<AuthProvider, BookService>(
+      builder: (context, authProvider, bookProvider, _) {
+        final currentBook = bookProvider.books.firstWhere((b) => b.id == book.id);
+        final isFav = authProvider.isAuthenticated
+            ? authProvider.currentUser!.favorites.contains(currentBook.id)
+            : false;
+
+        return IconButton(
+          icon: Icon(
+            isFav ? Icons.favorite : Icons.favorite_border,
+            color: isFav ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.onPrimary,
           ),
+          onPressed: () async {
+            if (!authProvider.isAuthenticated) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Vui lòng đăng nhập để thêm vào danh sách yêu thích.'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+              return;
+            }
+
+            // Toggle favorite trong DB
+            await bookProvider.toggleFavorite(currentBook.id, authProvider.currentUser!.id);
+
+            // Cập nhật local user
+            final updatedUser = authProvider.currentUser!.copyWith(
+              favorites: authProvider.currentUser!.favorites.contains(currentBook.id)
+                  ? (Set.from(authProvider.currentUser!.favorites)..remove(currentBook.id))
+                  : (Set.from(authProvider.currentUser!.favorites)..add(currentBook.id)),
+            );
+            authProvider.setCurrentUser(updatedUser);
+
+            final updatedFav = updatedUser.favorites.contains(currentBook.id);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  updatedFav
+                      ? 'Đã thêm "${currentBook.title}" vào danh sách yêu thích'
+                      : 'Đã bỏ yêu thích "${currentBook.title}"',
+                ),
+                duration: const Duration(seconds: 1),
+              ),
+            );
+          },
+        );
+      },
+    ),
+  ],
+),
+
           body: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
