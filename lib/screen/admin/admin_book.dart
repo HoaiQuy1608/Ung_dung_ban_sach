@@ -14,7 +14,6 @@ class BookManagementScreen extends StatefulWidget {
 }
 
 class _BookManagementScreenState extends State<BookManagementScreen> {
-  // ... (Tất cả logic initState, _loadCategories, _showToast, v.v... giữ nguyên) ...
   final _bookRef = FirebaseDatabase.instance.ref('books');
   final _categoryRef = FirebaseDatabase.instance.ref('categories');
   final _picker = ImagePicker();
@@ -38,18 +37,27 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
     _loadCategories();
   }
 
-  /// 🔹 Lấy danh sách thể loại từ Realtime Database
-  Future<void> _loadCategories() async {
+  /// 🔹 Load danh sách thể loại
+  Future<void> _loadCategories({String? currentGenre}) async {
     final snapshot = await _categoryRef.get();
     if (snapshot.exists && snapshot.value is Map) {
       final data = snapshot.value as Map<dynamic, dynamic>;
       setState(() {
         _categories = data.values
-            .whereType<Map>() // lọc object
+            .whereType<Map>()
             .map((e) => e['name']?.toString() ?? '')
             .where((name) => name.isNotEmpty)
             .toList();
+
+        // Nếu thể loại đang chỉnh sửa không có trong list, thêm tạm
+        if (currentGenre != null && !_categories.contains(currentGenre)) {
+          _categories.add(currentGenre);
+        }
       });
+    } else if (currentGenre != null) {
+      setState(() => _categories = [currentGenre]);
+    } else {
+      setState(() => _categories = []);
     }
   }
 
@@ -70,7 +78,9 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
   }
 
   /// 🔹 Mở form thêm / sửa sách
-  void _openBookForm({Book? book}) {
+  void _openBookForm({Book? book}) async {
+    _pickedImage = null;
+
     if (book != null) {
       _titleController.text = book.title;
       _authorController.text = book.author;
@@ -79,16 +89,22 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
       _selectedCategory = book.genre;
       _isEditing = true;
       _editingId = book.id;
+
+      // Reload danh sách thể loại, đảm bảo genre hiện tại tồn tại
+      await _loadCategories(currentGenre: book.genre);
     } else {
       _titleController.clear();
       _authorController.clear();
       _priceController.clear();
       _descriptionController.clear();
-      _pickedImage = null;
       _selectedCategory = null;
       _isEditing = false;
       _editingId = null;
+
+      await _loadCategories();
     }
+
+    if (!mounted) return;
 
     showModalBottomSheet(
       context: context,
@@ -129,16 +145,32 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                             width: double.infinity,
                             fit: BoxFit.cover)
                         : (book?.imageBase64.isNotEmpty ?? false)
-                            ? Image.memory(base64Decode(book!.imageBase64),
-                                height: 150,
-                                width: double.infinity,
-                                fit: BoxFit.cover)
+                            ? Builder(
+                                builder: (_) {
+                                  try {
+                                    return Image.memory(
+                                      base64Decode(book!.imageBase64),
+                                      height: 150,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    );
+                                  } catch (_) {
+                                    return Container(
+                                      height: 150,
+                                      width: double.infinity,
+                                      color: Colors.grey[300],
+                                      child: const Center(
+                                          child: Text('Ảnh không hợp lệ')),
+                                    );
+                                  }
+                                },
+                              )
                             : Container(
                                 height: 150,
                                 width: double.infinity,
                                 color: Colors.grey[300],
-                                child:
-                                    const Center(child: Text('Chọn ảnh sách')),
+                                child: const Center(
+                                    child: Text('Chọn ảnh sách')),
                               ),
                   ),
 
@@ -157,7 +189,6 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                     keyboardType: TextInputType.number,
                   ),
 
-                  /// Dropdown chọn thể loại
                   DropdownButtonFormField<String>(
                     decoration: const InputDecoration(labelText: 'Thể loại'),
                     value: _selectedCategory,
@@ -244,19 +275,10 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ⭐️ [SỬA] Lấy màu sắc từ Theme
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      // ⭐️ [XÓA] Xóa AppBar ở đây
-      // vì nó đã được quản lý bởi `admin_dashboard_screen.dart`
-      // appBar: AppBar(
-      //   title: const Text('Quản lý sách'),
-      //   backgroundColor: Colors.redAccent, // 👈 Xóa
-      // ),
       floatingActionButton: FloatingActionButton(
-        // ⭐️ [XÓA] Xóa màu, tự động dùng màu `fabSurface` của Theme
-        // backgroundColor: Colors.redAccent,
         onPressed: () => _openBookForm(),
         child: const Icon(Icons.add),
       ),
@@ -330,7 +352,6 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                               overflow: TextOverflow.ellipsis),
                           Text(
                             '${book.price} VNĐ',
-                            // ⭐️ [SỬA] Dùng màu tertiary (thường là màu nổi bật)
                             style: TextStyle(color: colorScheme.tertiary),
                           ),
                           Text(book.author,
@@ -340,7 +361,6 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                             book.genre,
                             style: TextStyle(
                               fontSize: 12,
-                              // ⭐️ [SỬA] Dùng màu secondary
                               color: colorScheme.secondary,
                             ),
                           ),
@@ -349,12 +369,12 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                             children: [
                               IconButton(
                                 icon: Icon(Icons.edit,
-                                    color: colorScheme.secondary), // 👈 Sửa
+                                    color: colorScheme.secondary),
                                 onPressed: () => _openBookForm(book: book),
                               ),
                               IconButton(
                                 icon: Icon(Icons.delete,
-                                    color: colorScheme.error), // 👈 Sửa
+                                    color: colorScheme.error),
                                 onPressed: () => _deleteBook(book.id),
                               ),
                             ],

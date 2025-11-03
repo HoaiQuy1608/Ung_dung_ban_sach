@@ -92,42 +92,63 @@ class _AdminCategoryState extends State<AdminCategory> {
 
   // 🗑 Xóa thể loại
   void _deleteCategory(CategoryModel category) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Xác nhận'),
-        content: Text('Bạn có chắc muốn xóa thể loại "${category.name}"?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Hủy')),
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                await _dbRef.child(category.id).remove();
-                toastification.show(
-                  context: context,
-                  title: const Text('Đã xóa thể loại'),
-                  type: ToastificationType.info,
-                  autoCloseDuration: const Duration(seconds: 2),
-                );
-              } catch (e) {
-                debugPrint('❌ Lỗi khi xóa thể loại: $e');
-                toastification.show(
-                  context: context,
-                  title: const Text('Lỗi khi xóa thể loại'),
-                  type: ToastificationType.error,
-                  autoCloseDuration: const Duration(seconds: 2),
-                );
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Xác nhận'),
+      content: Text('Bạn có chắc muốn xóa thể loại "${category.name}"? '
+          'Tất cả sách thuộc thể loại này sẽ được cập nhật.'),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy')),
+        ElevatedButton(
+          onPressed: () async {
+            try {
+              // 1️⃣ Lấy tất cả sách
+              final bookRef = FirebaseDatabase.instance
+                  .ref()
+                  .child('books');
+
+              final snapshot = await bookRef.orderByChild('genre').equalTo(category.name).get();
+
+              if (snapshot.exists) {
+                final booksMap = snapshot.value as Map<dynamic, dynamic>;
+                for (var entry in booksMap.entries) {
+                  final bookId = entry.key;
+                  // 2️⃣ Cập nhật lại thể loại sách thành 'Khác' (hoặc '')
+                  await bookRef.child(bookId).update({'genre': 'Khác'});
+                }
               }
-              if (mounted) Navigator.pop(context);
-            },
-            child: const Text('Xóa'),
-          )
-        ],
-      ),
-    );
-  }
+
+              // 3️⃣ Xóa thể loại
+              await _dbRef.child(category.id).remove();
+
+              toastification.show(
+                context: context,
+                title: const Text('Đã xóa thể loại và cập nhật sách liên quan'),
+                type: ToastificationType.info,
+                autoCloseDuration: const Duration(seconds: 2),
+              );
+            } catch (e) {
+              debugPrint('❌ Lỗi khi xóa thể loại: $e');
+              toastification.show(
+                context: context,
+                title: const Text('Lỗi khi xóa thể loại'),
+                type: ToastificationType.error,
+                autoCloseDuration: const Duration(seconds: 2),
+              );
+            }
+
+            if (mounted) Navigator.pop(context);
+          },
+          child: const Text('Xóa'),
+        )
+      ],
+    ),
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
