@@ -137,18 +137,13 @@ class ProfileScreen extends StatelessWidget {
           Center(
             child: Text(
               user.name.isNotEmpty ? user.name : 'Người dùng',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
           ),
           Center(
             child: Text(
               user.role == UserRole.admin ? 'Quản trị viên' : 'Khách hàng',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
             ),
           ),
           Center(
@@ -184,15 +179,20 @@ class ProfileScreen extends StatelessWidget {
             title: const Text('Sách yêu thích'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              Navigator.of(context)
-                  .push(MaterialPageRoute(builder: (_) => const WishlistScreen()));
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const WishlistScreen()));
             },
           ),
           ListTile(
             leading: const Icon(Icons.settings_outlined),
             title: const Text('Cài đặt ứng dụng'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
+            onTap: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
+            },
           ),
           const SizedBox(height: 20),
           ListTile(

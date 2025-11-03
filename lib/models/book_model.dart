@@ -1,3 +1,5 @@
+import 'package:firebase_database/firebase_database.dart';
+
 enum BookStatus { available, pending, sold }
 
 class Book {
@@ -11,6 +13,7 @@ class Book {
   final double rating;
   final BookStatus status;
   bool isFavorite;
+  final int stock;
 
   Book({
     required this.id,
@@ -23,28 +26,29 @@ class Book {
     required this.rating,
     this.status = BookStatus.available,
     this.isFavorite = false,
+    this.stock = 0,
   });
 
-  /// ✅ Chuyển từ JSON Firebase sang model
-  factory Book.fromJson(String id, Map<String, dynamic> json) {
+  factory Book.fromSnapshot(DataSnapshot snapshot) {
+    final json = snapshot.value as Map<dynamic, dynamic>? ?? {};
     return Book(
-      id: id,
-      title: json['title'] ?? '',
-      author: json['author'] ?? '',
-      genre: json['genre'] ?? '',
-      imageBase64: json['imageBase64'] ?? '',
-      price: (json['price'] ?? 0).toDouble(),
-      description: json['description'] ?? '',
-      rating: (json['rating'] ?? 0).toDouble(),
+      id: snapshot.key ?? '',
+      title: json['title'] as String? ?? '',
+      author: json['author'] as String? ?? '',
+      genre: json['genre'] as String? ?? '',
+      imageBase64: json['imageBase64'] as String? ?? '',
+      price: (json['price'] as num? ?? 0.0).toDouble(),
+      description: json['description'] as String? ?? '',
+      rating: (json['rating'] as num? ?? 0.0).toDouble(),
       status: BookStatus.values.firstWhere(
-        (e) => e.name == (json['status'] ?? 'available'),
+        (e) => e.name == (json['status'] as String?),
         orElse: () => BookStatus.available,
       ),
-      isFavorite: json['isFavorite'] ?? false,
+      isFavorite: false,
+      stock: json['stock'] as int? ?? 0,
     );
   }
 
-  /// ✅ Chuyển sang JSON để lưu Firebase
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -57,6 +61,7 @@ class Book {
       'rating': rating,
       'status': status.name,
       'isFavorite': isFavorite,
+      'stock': stock,
     };
   }
 
@@ -71,6 +76,7 @@ class Book {
     double? rating,
     BookStatus? status,
     bool? isFavorite,
+    int? stock,
   }) {
     return Book(
       id: id ?? this.id,
@@ -83,6 +89,7 @@ class Book {
       rating: rating ?? this.rating,
       status: status ?? this.status,
       isFavorite: isFavorite ?? this.isFavorite,
+      stock: stock ?? this.stock,
     );
   }
 }

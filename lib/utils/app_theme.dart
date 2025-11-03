@@ -4,19 +4,33 @@ import 'package:flutter/material.dart';
 /// Designed with WCAG AA accessibility standards in mind
 class AppColors {
   // Primary Colors - Blue Palette
-  static const Color primaryBlue = Color(0xFF3B82F6); // #3B82F6 - Main brand color
-  static const Color primaryBlueLight = Color(0xFF60A5FA); // Lighter shade for hover/active states
-  static const Color primaryBlueDark = Color(0xFF2563EB); // Darker shade for emphasis
-  static const Color primaryBlueVeryDark = Color(0xFF1E40AF); // Deep blue for dark mode
+  static const Color primaryBlue = Color(
+    0xFF3B82F6,
+  ); // #3B82F6 - Main brand color
+  static const Color primaryBlueLight = Color(
+    0xFF60A5FA,
+  ); // Lighter shade for hover/active states
+  static const Color primaryBlueDark = Color(
+    0xFF2563EB,
+  ); // Darker shade for emphasis
+  static const Color primaryBlueVeryDark = Color(
+    0xFF1E40AF,
+  ); // Deep blue for dark mode
 
   // Secondary Colors - Analogous palette (Cyan/Teal)
-  static const Color secondaryCyan = Color(0xFF06B6D4); // Cyan - analogous to blue
+  static const Color secondaryCyan = Color(
+    0xFF06B6D4,
+  ); // Cyan - analogous to blue
   static const Color secondaryCyanLight = Color(0xFF22D3EE);
   static const Color secondaryCyanDark = Color(0xFF0891B2);
 
   // Accent Colors - Complementary palette (Orange/Amber)
-  static const Color accentOrange = Color(0xFFF97316); // Orange - complementary to blue
-  static const Color accentAmber = Color(0xFFF59E0B); // Amber - for warnings/CTAs
+  static const Color accentOrange = Color(
+    0xFFF97316,
+  ); // Orange - complementary to blue
+  static const Color accentAmber = Color(
+    0xFFF59E0B,
+  ); // Amber - for warnings/CTAs
   static const Color accentOrangeLight = Color(0xFFFB923C);
   static const Color accentOrangeDark = Color(0xFFEA580C);
 
@@ -131,9 +145,7 @@ class AppTheme {
       // Card theme
       cardTheme: CardThemeData(
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         color: colorScheme.surface,
       ),
 
@@ -210,9 +222,7 @@ class AppTheme {
         backgroundColor: colorScheme.inverseSurface,
         contentTextStyle: TextStyle(color: colorScheme.onInverseSurface),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
 
       // Divider theme
@@ -223,10 +233,7 @@ class AppTheme {
       ),
 
       // Icon theme
-      iconTheme: IconThemeData(
-        color: colorScheme.onSurfaceVariant,
-        size: 24,
-      ),
+      iconTheme: IconThemeData(color: colorScheme.onSurfaceVariant, size: 24),
 
       // Floating action button theme
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -310,9 +317,7 @@ class AppTheme {
       // Card theme
       cardTheme: CardThemeData(
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         color: colorScheme.surface,
       ),
 
@@ -389,9 +394,7 @@ class AppTheme {
         backgroundColor: colorScheme.inverseSurface,
         contentTextStyle: TextStyle(color: colorScheme.onInverseSurface),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
 
       // Divider theme
@@ -402,10 +405,7 @@ class AppTheme {
       ),
 
       // Icon theme
-      iconTheme: IconThemeData(
-        color: colorScheme.onSurfaceVariant,
-        size: 24,
-      ),
+      iconTheme: IconThemeData(color: colorScheme.onSurfaceVariant, size: 24),
 
       // Floating action button theme
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -430,13 +430,13 @@ class AppTheme {
 extension ThemeColorExtension on BuildContext {
   /// Get success color
   Color get successColor => AppColors.successGreen;
-  
+
   /// Get error color from theme
   Color get errorColor => Theme.of(this).colorScheme.error;
-  
+
   /// Get warning color
   Color get warningColor => AppColors.warningAmber;
-  
+
   /// Get star/rating color
   Color get starColor => AppColors.starAmber;
 }
