@@ -32,7 +32,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     'Quản lý Sách',
     'Quản lý Thể loại',
     'Quản lý Đơn hàng',
-    'Cài đặt'
+    'Cài đặt',
   ];
 
   void _onItemTapped(int index) {
@@ -48,7 +48,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_screenTitles[_selectedIndex]), // 👈 Tiêu đề thay đổi theo tab
+        title: Text(
+          _screenTitles[_selectedIndex],
+        ), // 👈 Tiêu đề thay đổi theo tab
         // ⭐️ [SỬA] Màu AppBar sẽ tự động theo theme
         // Không cần nút Logout ở đây nữa vì đã chuyển vào Cài đặt
         actions: [
@@ -60,10 +62,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ],
       ),
       // ⭐️ [SỬA] Hiển thị các màn hình dùng IndexedStack để giữ state
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _screens),
       // ⭐️ [SỬA] Cập nhật BottomNavigationBar
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed, // 👈 Luôn hiển thị label
@@ -129,14 +128,17 @@ class DashboardHome extends StatelessWidget {
         children: [
           Text(
             'Thống kê Nhanh',
-            style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            style: textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           // 4 thẻ thống kê
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true, // 👈 Bắt buộc trong SingleChildScrollView
-            physics: const NeverScrollableScrollPhysics(), // 👈 Không cho grid cuộn
+            physics:
+                const NeverScrollableScrollPhysics(), // 👈 Không cho grid cuộn
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
             childAspectRatio: 1.5, // 👈 Điều chỉnh tỉ lệ thẻ
@@ -176,7 +178,9 @@ class DashboardHome extends StatelessWidget {
           // Danh sách đơn hàng gần đây
           Text(
             'Đơn hàng Gần đây',
-            style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            style: textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 12),
           // TODO: Thay bằng ListView.builder từ OrderProvider
@@ -236,9 +240,9 @@ class DashboardHome extends StatelessWidget {
                 Text(
                   value,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: color, // 👈 Giá trị với màu chính
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: color, // 👈 Giá trị với màu chính
+                  ),
                 ),
                 Text(label, style: Theme.of(context).textTheme.bodyMedium),
               ],
