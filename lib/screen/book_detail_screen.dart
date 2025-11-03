@@ -24,7 +24,11 @@ class BookDetailScreen extends StatelessWidget {
     }
   }
 
-  void _addToCart(BuildContext context, AuthProvider authProvider, CartProvider cartProvider) {
+  void _addToCart(
+    BuildContext context,
+    AuthProvider authProvider,
+    CartProvider cartProvider,
+  ) {
     if (!authProvider.isAuthenticated) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -70,7 +74,9 @@ class BookDetailScreen extends StatelessWidget {
 
     return Consumer<BookService>(
       builder: (context, bookProvider, _) {
-        final currentBook = bookProvider.books.firstWhere((b) => b.id == book.id);
+        final currentBook = bookProvider.books.firstWhere(
+          (b) => b.id == book.id,
+        );
         final colorScheme = Theme.of(context).colorScheme;
 
         // Decode Base64
@@ -81,66 +87,82 @@ class BookDetailScreen extends StatelessWidget {
           imageBytes = null;
         }
 
-        // Kiểm tra trạng thái favorite theo user hiện tại
+        // Kiểm tra trạng thái yêu thích
         final isFav = authProvider.isAuthenticated
             ? authProvider.currentUser!.favorites.contains(currentBook.id)
             : false;
 
         return Scaffold(
           appBar: AppBar(
-  title: Text(book.title, style: GoogleFonts.merriweather()),
-  actions: [
-    Consumer2<AuthProvider, BookService>(
-      builder: (context, authProvider, bookProvider, _) {
-        final currentBook = bookProvider.books.firstWhere((b) => b.id == book.id);
-        final isFav = authProvider.isAuthenticated
-            ? authProvider.currentUser!.favorites.contains(currentBook.id)
-            : false;
+            title: Text(book.title, style: GoogleFonts.merriweather()),
+            actions: [
+              Consumer2<AuthProvider, BookService>(
+                builder: (context, authProvider, bookProvider, _) {
+                  final currentBook = bookProvider.books.firstWhere(
+                    (b) => b.id == book.id,
+                  );
+                  final isFav = authProvider.isAuthenticated
+                      ? authProvider.currentUser!.favorites.contains(
+                          currentBook.id,
+                        )
+                      : false;
 
-        return IconButton(
-          icon: Icon(
-            isFav ? Icons.favorite : Icons.favorite_border,
-            color: isFav ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.onPrimary,
-          ),
-          onPressed: () async {
-            if (!authProvider.isAuthenticated) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Vui lòng đăng nhập để thêm vào danh sách yêu thích.'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-              return;
-            }
+                  return IconButton(
+                    icon: Icon(
+                      isFav ? Icons.favorite : Icons.favorite_border,
+                      color: isFav
+                          ? Theme.of(context).colorScheme.error
+                          : Theme.of(context).colorScheme.onPrimary,
+                    ),
+                    onPressed: () async {
+                      if (!authProvider.isAuthenticated) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Vui lòng đăng nhập để thêm vào danh sách yêu thích.',
+                            ),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                        return;
+                      }
 
-            // Toggle favorite trong DB
-            await bookProvider.toggleFavorite(currentBook.id, authProvider.currentUser!.id);
+                      await bookProvider.toggleFavorite(
+                        currentBook.id,
+                        authProvider.currentUser!.id,
+                      );
 
-            // Cập nhật local user
-            final updatedUser = authProvider.currentUser!.copyWith(
-              favorites: authProvider.currentUser!.favorites.contains(currentBook.id)
-                  ? (Set.from(authProvider.currentUser!.favorites)..remove(currentBook.id))
-                  : (Set.from(authProvider.currentUser!.favorites)..add(currentBook.id)),
-            );
-            authProvider.setCurrentUser(updatedUser);
+                      final updatedUser = authProvider.currentUser!.copyWith(
+                        favorites:
+                            authProvider.currentUser!.favorites.contains(
+                              currentBook.id,
+                            )
+                            ? (Set.from(authProvider.currentUser!.favorites)
+                                ..remove(currentBook.id))
+                            : (Set.from(authProvider.currentUser!.favorites)
+                                ..add(currentBook.id)),
+                      );
+                      authProvider.setCurrentUser(updatedUser);
 
-            final updatedFav = updatedUser.favorites.contains(currentBook.id);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  updatedFav
-                      ? 'Đã thêm "${currentBook.title}" vào danh sách yêu thích'
-                      : 'Đã bỏ yêu thích "${currentBook.title}"',
-                ),
-                duration: const Duration(seconds: 1),
+                      final updatedFav = updatedUser.favorites.contains(
+                        currentBook.id,
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            updatedFav
+                                ? 'Đã thêm "${currentBook.title}" vào danh sách yêu thích'
+                                : 'Đã bỏ yêu thích "${currentBook.title}"',
+                          ),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
-            );
-          },
-        );
-      },
-    ),
-  ],
-),
+            ],
+          ),
 
           body: SingleChildScrollView(
             child: Column(
@@ -169,7 +191,9 @@ class BookDetailScreen extends StatelessWidget {
                                 child: Center(
                                   child: Text(
                                     'Lỗi tải ảnh',
-                                    style: TextStyle(color: colorScheme.onSurfaceVariant),
+                                    style: TextStyle(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -218,6 +242,28 @@ class BookDetailScreen extends StatelessWidget {
                           ),
                         ],
                       ),
+
+                      // ✅ Thêm dòng hiển thị thể loại
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.category,
+                            color: colorScheme.primary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Thể loại: ${book.genre}',
+                            style: GoogleFonts.nunito(
+                              fontSize: 16,
+                              color: colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+
                       const SizedBox(height: 20),
                       Text(
                         'GIÁ BÁN:',
@@ -275,13 +321,23 @@ class BookDetailScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => _addToCart(context, authProvider, cartProvider),
-                    icon: Icon(Icons.shopping_cart, size: 24, color: colorScheme.tertiary),
-                    label: Text('Thêm vào giỏ', style: TextStyle(color: colorScheme.tertiary)),
+                    onPressed: () =>
+                        _addToCart(context, authProvider, cartProvider),
+                    icon: Icon(
+                      Icons.shopping_cart,
+                      size: 24,
+                      color: colorScheme.tertiary,
+                    ),
+                    label: Text(
+                      'Thêm vào giỏ',
+                      style: TextStyle(color: colorScheme.tertiary),
+                    ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       side: BorderSide(color: colorScheme.tertiary),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                 ),
@@ -289,14 +345,23 @@ class BookDetailScreen extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () => _buyNow(context, authProvider),
-                    icon: Icon(Icons.payment, size: 24, color: colorScheme.onPrimary),
+                    icon: Icon(
+                      Icons.payment,
+                      size: 24,
+                      color: colorScheme.onPrimary,
+                    ),
                     label: const Text('MUA NGAY'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 15),
-                      textStyle: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      textStyle: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                 ),
