@@ -1,13 +1,14 @@
+// lib/screen/admin/admin_settings_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '/providers/theme_provider.dart'; // 👈 Dùng chung provider
+import '/providers/theme_provider.dart';
 import '/providers/auth_provider.dart';
 import '../login_screen.dart';
 
 class AdminSettingsScreen extends StatelessWidget {
   const AdminSettingsScreen({super.key});
 
-  // Xử lý đăng xuất
+  // 🟣 Hộp thoại xác nhận đăng xuất
   Future<void> _confirmLogout(BuildContext context) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
@@ -21,12 +22,11 @@ class AdminSettingsScreen extends StatelessWidget {
           ),
           actions: <Widget>[
             TextButton(
-              onPressed: () =>
-                  Navigator.of(context).pop(false), // Không đăng xuất
+              onPressed: () => Navigator.of(context).pop(false),
               child: const Text('Hủy'),
             ),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(true), // Đăng xuất
+              onPressed: () => Navigator.of(context).pop(true),
               child: const Text(
                 'Đăng xuất',
                 style: TextStyle(color: Colors.red),
@@ -39,7 +39,6 @@ class AdminSettingsScreen extends StatelessWidget {
 
     if (shouldLogout == true) {
       authProvider.logout();
-      // Về thẳng LoginScreen và xóa hết lịch sử
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const LoginScreen()),
         (Route<dynamic> route) => false,
@@ -49,18 +48,14 @@ class AdminSettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Lắng nghe ThemeProvider để cập nhật UI
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
-      // AppBar sẽ tự động có màu theo theme
-      appBar: AppBar(
-        title: const Text('Cài đặt Quản trị'),
-      ),
+      // ❌ Không cần AppBar nữa vì Dashboard đã có tiêu đề
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // --- Chức năng đổi Theme ---
+          // 🌗 Chuyển chế độ nền sáng / tối
           ListTile(
             leading: Icon(
               themeProvider.themeMode == ThemeMode.dark
@@ -73,7 +68,6 @@ class AdminSettingsScreen extends StatelessWidget {
             trailing: Switch(
               value: themeProvider.themeMode == ThemeMode.dark,
               onChanged: (value) {
-                // Thay đổi theme cho toàn bộ ứng dụng (cả User và Admin)
                 Provider.of<ThemeProvider>(
                   context,
                   listen: false,
@@ -82,9 +76,12 @@ class AdminSettingsScreen extends StatelessWidget {
             ),
           ),
           const Divider(),
-          // --- Nút Đăng xuất ---
+          // 🚪 Đăng xuất
           ListTile(
-            leading: Icon(Icons.logout, color: Theme.of(context).colorScheme.error),
+            leading: Icon(
+              Icons.logout,
+              color: Theme.of(context).colorScheme.error,
+            ),
             title: Text(
               'Đăng xuất',
               style: TextStyle(color: Theme.of(context).colorScheme.error),

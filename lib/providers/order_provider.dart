@@ -106,13 +106,6 @@ class OrderProvider with ChangeNotifier {
     _allOrdersSub = null;
   }
 
-  // ------------------ Add Order (atomic with stock decrement & notification) ------------------
-  /// Creates an order **atomically**:
-  /// - checks stock for each book
-  /// - prepares multiPath update:
-  ///    /orders/{orderKey} = order
-  ///    /books/{bookId}/stock = newStock (decrement)
-  ///    /notifications/{notifKey} = notification
   Future<void> addOrder({
     required String userId,
     required double totalAmount,
@@ -145,7 +138,7 @@ class OrderProvider with ChangeNotifier {
       name: name,
       phone: phone,
       address: address,
-      status: 'Pending',
+      status: 'Đang chờ',
       orderDate: DateTime.now(),
     );
 
@@ -191,12 +184,12 @@ class OrderProvider with ChangeNotifier {
         throw Exception('Không tìm thấy đơn hàng $orderId');
       final orderData = orderSnap.value as Map<dynamic, dynamic>;
       final userId = orderData['userId'] as String? ?? '';
-      final currentStatus = orderData['status'] as String? ?? 'Pending';
+      final currentStatus = orderData['status'] as String? ?? 'Đang chờ';
 
       final Map<String, dynamic> multiPath = {};
       multiPath['/orders/$orderId/status'] = newStatus;
 
-      if (newStatus == 'Cancelled' && currentStatus != 'Cancelled') {
+      if (newStatus == 'Đã hủy' && currentStatus != 'Đã hủy') {
         // restock each item via transactions (to be safe in concurrent env)
         final itemsList = (orderData['items'] as List<dynamic>? ?? []);
         for (var itemMap in itemsList) {
@@ -220,22 +213,22 @@ class OrderProvider with ChangeNotifier {
           'Đơn #${orderId.substring(orderId.length - 6)} đã đổi trạng thái thành $newStatus.';
       String iconType = 'default';
       switch (newStatus) {
-        case 'Confirmed':
+        case 'Đã xác nhận':
           title = 'Đơn hàng đã được Xác nhận!';
           message = 'Shop đang chuẩn bị hàng của bạn. Cảm ơn bạn!';
           iconType = 'success';
           break;
-        case 'Shipping':
+        case 'Đang giao':
           title = 'Đơn hàng đang Giao!';
           message = 'Đơn hàng của bạn đang trên đường tới bạn.';
           iconType = 'shipping';
           break;
-        case 'Delivered':
+        case 'Đã giao':
           title = 'Đã giao hàng Thành công!';
           message = 'Cảm ơn bạn đã mua hàng tại cửa hàng!';
           iconType = 'success';
           break;
-        case 'Cancelled':
+        case 'Đã hủy':
           title = 'Đơn hàng đã bị Hủy.';
           message = 'Rất tiếc, đơn hàng của bạn đã bị hủy.';
           iconType = 'offer';
@@ -288,8 +281,8 @@ class OrderProvider with ChangeNotifier {
     final data = orderSnap.value as Map<dynamic, dynamic>;
     if ((data['userId'] as String? ?? '') != userId)
       throw Exception('Bạn không có quyền hủy đơn hàng này');
-    final status = data['status'] as String? ?? 'Pending';
-    if (status != 'Pending')
+    final status = data['status'] as String? ?? 'Đang chờ';
+    if (status != 'Đang chờ')
       throw Exception(
         'Không thể hủy đơn hàng đã được xác nhận hoặc đang giao!',
       );
@@ -299,7 +292,7 @@ class OrderProvider with ChangeNotifier {
     if (passed > 30)
       throw Exception('Đã quá 30 phút, không thể tự động hủy đơn hàng!');
 
-    await updateOrderStatus(orderId, 'Cancelled');
+    await updateOrderStatus(orderId, 'Đã hủy');
   }
 
   // ------------------ Helpers ------------------

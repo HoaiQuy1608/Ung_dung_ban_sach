@@ -30,6 +30,24 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
     }
   }
 
+  // 🟣 Dịch trạng thái sang tiếng Việt
+  String _translateStatus(String status) {
+    switch (status) {
+      case 'Pending':
+        return 'Đang chờ xác nhận';
+      case 'Confirmed':
+        return 'Đã xác nhận';
+      case 'Shipping':
+        return 'Đang giao hàng';
+      case 'Delivered':
+        return 'Đã giao hàng';
+      case 'Cancelled':
+        return 'Đã hủy';
+      default:
+        return status;
+    }
+  }
+
   Future<void> _confirmCancelOrder(BuildContext context, Order order) async {
     final bool? didConfirm = await showDialog<bool>(
       context: context,
@@ -89,16 +107,26 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
+      // ✅ Có AppBar cho user, ẩn khi là admin
       appBar: widget.isAdmin
-          ? AppBar(title: const Text('Quản lý đơn hàng'))
-          : AppBar(title: const Text('Lịch sử mua hàng')),
+          ? null
+          : AppBar(
+              title: const Text('Lịch sử đơn hàng'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
       body: Consumer<OrderProvider>(
         builder: (context, orderProvider, _) {
           final orders = orderProvider.orders;
-          if (orderProvider.isLoading)
+
+          if (orderProvider.isLoading) {
             return const Center(child: CircularProgressIndicator());
-          if (orders.isEmpty)
+          }
+          if (orders.isEmpty) {
             return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -113,6 +141,7 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
                 ],
               ),
             );
+          }
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -123,6 +152,7 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
               final formattedTotal = cartProvider.formatPrice(
                 order.totalAmount,
               );
+
               return Card(
                 margin: const EdgeInsets.only(bottom: 15),
                 child: ExpansionTile(
@@ -163,32 +193,30 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
                             style: const TextStyle(color: Colors.grey),
                           ),
                           const Divider(),
-                          ...order.items
-                              .map(
-                                (item) => Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 4.0,
+                          ...order.items.map(
+                            (item) => Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 4.0,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      '${item.book.title} x ${item.quantity}',
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
                                   ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          '${item.book.title} x ${item.quantity}',
-                                          style: const TextStyle(fontSize: 14),
-                                        ),
-                                      ),
-                                      Text(
-                                        cartProvider.formatPrice(
-                                          item.book.price * item.quantity,
-                                        ),
-                                      ),
-                                    ],
+                                  Text(
+                                    cartProvider.formatPrice(
+                                      item.book.price * item.quantity,
+                                    ),
                                   ),
-                                ),
-                              )
-                              .toList(),
+                                ],
+                              ),
+                            ),
+                          ),
                           const Divider(),
                           widget.isAdmin
                               ? _buildAdminStatusSelector(
@@ -210,6 +238,7 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
     );
   }
 
+  // 🟢 Hiển thị trạng thái cho người dùng
   Widget _buildUserStatusView(BuildContext context, Order order) {
     final bool canCancel = order.status == 'Pending';
     return Row(
@@ -223,7 +252,7 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
             Text(
-              order.status,
+              _translateStatus(order.status),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -244,6 +273,7 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
     );
   }
 
+  // 🟣 Dropdown cho admin
   Widget _buildAdminStatusSelector(
     BuildContext context,
     Order order,
@@ -259,11 +289,16 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text('Quản lý Trạng thái:'),
+        const Text('Trạng thái đơn hàng:'),
         DropdownButton<String>(
           value: order.status,
           items: statuses
-              .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+              .map(
+                (s) => DropdownMenuItem(
+                  value: s,
+                  child: Text(_translateStatus(s)),
+                ),
+              )
               .toList(),
           onChanged: (newStatus) {
             if (newStatus != null && newStatus != order.status) {

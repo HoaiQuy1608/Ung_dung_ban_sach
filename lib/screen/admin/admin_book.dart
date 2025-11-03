@@ -38,6 +38,18 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
     _loadCategories();
   }
 
+  // 🔹 Map trạng thái sang tiếng Việt
+  String _statusToVietnamese(BookStatus status) {
+    switch (status) {
+      case BookStatus.available:
+        return 'Còn hàng';
+      case BookStatus.pending:
+        return 'Đang xử lý';
+      case BookStatus.sold:
+        return 'Đã bán hết';
+    }
+  }
+
   Future<void> _loadCategories() async {
     final snapshot = await _categoryRef.get();
     if (snapshot.exists && snapshot.value is Map) {
@@ -180,13 +192,15 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                     keyboardType: TextInputType.number,
                   ),
                   DropdownButtonFormField<BookStatus>(
-                    decoration: const InputDecoration(labelText: 'Trạng thái'),
+                    decoration: const InputDecoration(
+                      labelText: 'Trạng thái sách',
+                    ),
                     value: _selectedStatus,
                     items: BookStatus.values
                         .map(
                           (status) => DropdownMenuItem(
                             value: status,
-                            child: Text(status.name),
+                            child: Text(_statusToVietnamese(status)),
                           ),
                         )
                         .toList(),
@@ -299,10 +313,8 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                 final value = e.value;
                 if (value is Map) {
                   return Book.fromJson(e.key, Map<String, dynamic>.from(value));
-                } else {
-                  debugPrint('⚠️ Dòng dữ liệu không hợp lệ: $value');
-                  return null;
                 }
+                return null;
               })
               .whereType<Book>()
               .toList();
@@ -370,7 +382,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                             ),
                           ),
                           Text(
-                            'Trạng thái: ${book.status.name}',
+                            'Trạng thái: ${_statusToVietnamese(book.status)}',
                             style: const TextStyle(fontSize: 12),
                           ),
                           Text(

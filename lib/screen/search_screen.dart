@@ -21,7 +21,7 @@ class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _controller = TextEditingController();
   Timer? _debounce;
   String _query = '';
-  String _selectedCategory = 'All';
+  String _selectedCategory = 'Tất cả';
 
   late DatabaseReference _categoryRef;
   List<CategoryModel> _categories = [];
@@ -65,7 +65,7 @@ class _SearchScreenState extends State<SearchScreen> {
           book.author.toLowerCase().contains(q);
 
       final matchesCategory =
-          _selectedCategory == 'All' ||
+          _selectedCategory == 'Tất cả' ||
           book.genre.toLowerCase() == _selectedCategory.toLowerCase();
 
       return matchesQuery && matchesCategory;
@@ -98,8 +98,8 @@ class _SearchScreenState extends State<SearchScreen> {
     final bookService = Provider.of<BookService>(context);
     final filteredBooks = _getFilteredBooks(bookService);
 
-    // ✅ Gộp “All” với danh sách category từ Firebase
-    final allCategories = ['All', ..._categories.map((c) => c.name)];
+    // ✅ Gộp “Tất cả” với danh sách category từ Firebase
+    final allCategories = ['Tất cả', ..._categories.map((c) => c.name)];
 
     return Scaffold(
       appBar: AppBar(
@@ -165,7 +165,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : filteredBooks.isEmpty &&
                       _query.isEmpty &&
-                      _selectedCategory == 'All'
+                      _selectedCategory == 'Tất cả'
                 ? Center(
                     child: Text(
                       'Bắt đầu nhập để tìm kiếm sách hoặc chọn danh mục.',
