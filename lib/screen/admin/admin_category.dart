@@ -12,6 +12,7 @@ class AdminCategory extends StatefulWidget {
 }
 
 class _AdminCategoryState extends State<AdminCategory> {
+  // ... (Tất cả logic initState, _showCategoryDialog, _deleteCategory... giữ nguyên) ...
   late final DatabaseReference _dbRef;
 
   @override
@@ -130,15 +131,20 @@ class _AdminCategoryState extends State<AdminCategory> {
 
   @override
   Widget build(BuildContext context) {
+    // ⭐️ [SỬA] Lấy màu sắc từ Theme
+    final colorScheme = Theme.of(context).colorScheme;
+
     return ToastificationWrapper(
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Quản lý thể loại sách'),
-          backgroundColor: Colors.deepPurple,
-        ),
+        // ⭐️ [XÓA] Xóa AppBar
+        // appBar: AppBar(
+        //   title: const Text('Quản lý thể loại sách'),
+        //   backgroundColor: Colors.deepPurple, // 👈 Xóa
+        // ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _showCategoryDialog(),
-          backgroundColor: Colors.deepPurple,
+          // ⭐️ [XÓA] Xóa màu
+          // backgroundColor: Colors.deepPurple,
           child: const Icon(Icons.add),
         ),
         body: StreamBuilder<DatabaseEvent>(
@@ -148,7 +154,7 @@ class _AdminCategoryState extends State<AdminCategory> {
               return Center(
                 child: Text(
                   'Lỗi: ${snapshot.error}',
-                  style: const TextStyle(color: Colors.red),
+                  style: TextStyle(color: colorScheme.error), // 👈 Sửa
                 ),
               );
             }
@@ -169,17 +175,22 @@ class _AdminCategoryState extends State<AdminCategory> {
                 final item = categories[index];
                 return Card(
                   child: ListTile(
-                    leading: const Icon(Icons.category, color: Colors.deepPurple),
+                    leading: Icon(
+                      Icons.category,
+                      color: colorScheme.secondary, // 👈 Sửa
+                    ),
                     title: Text(item.name),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
+                          icon: Icon(Icons.edit,
+                              color: colorScheme.secondary), // 👈 Sửa
                           onPressed: () => _showCategoryDialog(category: item),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
+                          icon: Icon(Icons.delete,
+                              color: colorScheme.error), // 👈 Sửa
                           onPressed: () => _deleteCategory(item),
                         ),
                       ],

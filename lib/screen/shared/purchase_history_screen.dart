@@ -33,18 +33,25 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.isAdmin ? 'Quản lý Đơn hàng' : 'Lịch sử mua hàng'),
-        backgroundColor: widget.isAdmin ? Colors.redAccent : null,
-      ),
+      // ⭐️ [SỬA] Xóa AppBar nếu là Admin (vì đã có AppBar chung)
+      // Chỉ giữ lại AppBar cho User
+      appBar: widget.isAdmin
+          ? null
+          : AppBar(
+              title: const Text('Lịch sử mua hàng'),
+              // ⭐️ [XÓA] Xóa màu, để AppBar tự nhận màu theo Theme
+              // backgroundColor: widget.isAdmin ? Colors.redAccent : null,
+            ),
       body: Consumer<OrderProvider>(
         builder: (context, orderProvider, child) {
           final orders = orderProvider.orders;
 
           return orders.isEmpty
               ? const Center(
+                  // ... (Phần UI trống giữ nguyên) ...
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -78,14 +85,18 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
                       child: ExpansionTile(
                         initiallyExpanded: index == 0,
                         title: Text(
-                          'Đơn hàng #${order.orderId.substring(order.orderId.length - 6)}',
+                          // ⭐️ [SỬA] Thêm tên nếu là Admin
+                          widget.isAdmin 
+                            ? 'ĐH #${order.orderId.substring(order.orderId.length - 6)} - ${order.name}'
+                            : 'Đơn hàng #${order.orderId.substring(order.orderId.length - 6)}',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text('Ngày đặt: $formattedDate'),
                         trailing: Text(
                           formattedTotal,
-                          style: const TextStyle(
-                            color: Colors.red,
+                          style: TextStyle(
+                            // ⭐️ [SỬA] Dùng màu tertiary
+                            color: colorScheme.tertiary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -99,9 +110,10 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                // ⭐️ [SỬA] Chỉ hiển thị nếu là Admin
                                 if (widget.isAdmin)
                                   Text(
-                                    'Người mua: ${order.name} - ${order.phone}',
+                                    'SĐT: ${order.phone}',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),

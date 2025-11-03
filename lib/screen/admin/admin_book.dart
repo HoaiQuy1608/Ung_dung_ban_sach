@@ -14,6 +14,7 @@ class BookManagementScreen extends StatefulWidget {
 }
 
 class _BookManagementScreenState extends State<BookManagementScreen> {
+  // ... (Tất cả logic initState, _loadCategories, _showToast, v.v... giữ nguyên) ...
   final _bookRef = FirebaseDatabase.instance.ref('books');
   final _categoryRef = FirebaseDatabase.instance.ref('categories');
   final _picker = ImagePicker();
@@ -39,18 +40,18 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
 
   /// 🔹 Lấy danh sách thể loại từ Realtime Database
   Future<void> _loadCategories() async {
-  final snapshot = await _categoryRef.get();
-  if (snapshot.exists && snapshot.value is Map) {
-    final data = snapshot.value as Map<dynamic, dynamic>;
-    setState(() {
-      _categories = data.values
-          .whereType<Map>() // lọc object
-          .map((e) => e['name']?.toString() ?? '')
-          .where((name) => name.isNotEmpty)
-          .toList();
-    });
+    final snapshot = await _categoryRef.get();
+    if (snapshot.exists && snapshot.value is Map) {
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      setState(() {
+        _categories = data.values
+            .whereType<Map>() // lọc object
+            .map((e) => e['name']?.toString() ?? '')
+            .where((name) => name.isNotEmpty)
+            .toList();
+      });
+    }
   }
-}
 
   /// 🔹 Hiển thị thông báo
   void _showToast(String message, {bool success = true}) {
@@ -116,22 +117,28 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                   // Ảnh bìa
                   GestureDetector(
                     onTap: () async {
-                      final picked = await _picker.pickImage(source: ImageSource.gallery);
+                      final picked =
+                          await _picker.pickImage(source: ImageSource.gallery);
                       if (picked != null) {
                         setModalState(() => _pickedImage = File(picked.path));
                       }
                     },
                     child: _pickedImage != null
                         ? Image.file(_pickedImage!,
-                            height: 150, width: double.infinity, fit: BoxFit.cover)
+                            height: 150,
+                            width: double.infinity,
+                            fit: BoxFit.cover)
                         : (book?.imageBase64.isNotEmpty ?? false)
                             ? Image.memory(base64Decode(book!.imageBase64),
-                                height: 150, width: double.infinity, fit: BoxFit.cover)
+                                height: 150,
+                                width: double.infinity,
+                                fit: BoxFit.cover)
                             : Container(
                                 height: 150,
                                 width: double.infinity,
                                 color: Colors.grey[300],
-                                child: const Center(child: Text('Chọn ảnh sách')),
+                                child:
+                                    const Center(child: Text('Chọn ảnh sách')),
                               ),
                   ),
 
@@ -160,7 +167,8 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                               child: Text(cat),
                             ))
                         .toList(),
-                    onChanged: (val) => setModalState(() => _selectedCategory = val),
+                    onChanged: (val) =>
+                        setModalState(() => _selectedCategory = val),
                   ),
 
                   TextField(
@@ -197,11 +205,14 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
 
                       try {
                         if (_isEditing && _editingId != null) {
-                          await _bookRef.child(_editingId!).update(newBook.toJson());
+                          await _bookRef
+                              .child(_editingId!)
+                              .update(newBook.toJson());
                           _showToast('Cập nhật thành công ✅');
                         } else {
                           final newRef = _bookRef.push();
-                          await newRef.set(newBook.copyWith(id: newRef.key).toJson());
+                          await newRef
+                              .set(newBook.copyWith(id: newRef.key).toJson());
                           _showToast('Thêm thành công ✅');
                         }
                       } catch (e) {
@@ -231,16 +242,21 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
     }
   }
 
-  /// 🔹 Hiển thị danh sách sách
   @override
   Widget build(BuildContext context) {
+    // ⭐️ [SỬA] Lấy màu sắc từ Theme
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Quản lý sách'),
-        backgroundColor: Colors.redAccent,
-      ),
+      // ⭐️ [XÓA] Xóa AppBar ở đây
+      // vì nó đã được quản lý bởi `admin_dashboard_screen.dart`
+      // appBar: AppBar(
+      //   title: const Text('Quản lý sách'),
+      //   backgroundColor: Colors.redAccent, // 👈 Xóa
+      // ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.redAccent,
+        // ⭐️ [XÓA] Xóa màu, tự động dùng màu `fabSurface` của Theme
+        // backgroundColor: Colors.redAccent,
         onPressed: () => _openBookForm(),
         child: const Icon(Icons.add),
       ),
@@ -256,21 +272,20 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
 
           final rawData = snapshot.data!.snapshot.value;
 
-if (rawData is! Map) {
-  return const Center(child: Text('Dữ liệu sách không hợp lệ'));
-}
+          if (rawData is! Map) {
+            return const Center(child: Text('Dữ liệu sách không hợp lệ'));
+          }
 
-final data = rawData as Map<dynamic, dynamic>;
-final books = data.entries.map((e) {
-  final value = e.value;
-  if (value is Map) {
-    return Book.fromJson(e.key, Map<String, dynamic>.from(value));
-  } else {
-    debugPrint('⚠️ Dòng dữ liệu không hợp lệ: $value');
-    return null;
-  }
-}).whereType<Book>().toList();
-
+          final data = rawData as Map<dynamic, dynamic>;
+          final books = data.entries.map((e) {
+            final value = e.value;
+            if (value is Map) {
+              return Book.fromJson(e.key, Map<String, dynamic>.from(value));
+            } else {
+              debugPrint('⚠️ Dòng dữ liệu không hợp lệ: $value');
+              return null;
+            }
+          }).whereType<Book>().toList();
 
           return GridView.builder(
             padding: const EdgeInsets.all(10),
@@ -291,15 +306,17 @@ final books = data.entries.map((e) {
                   children: [
                     Expanded(
                       child: ClipRRect(
-                        borderRadius:
-                            const BorderRadius.vertical(top: Radius.circular(10)),
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(10)),
                         child: (book.imageBase64.isNotEmpty)
-                          ? Image.memory(base64Decode(book.imageBase64), fit: BoxFit.cover)
-                          : Container(
-                              color: Colors.grey[200],
-                              child: const Center(child: Icon(Icons.book, size: 50, color: Colors.grey)),
-                            ),
-
+                            ? Image.memory(base64Decode(book.imageBase64),
+                                fit: BoxFit.cover)
+                            : Container(
+                                color: Colors.grey[200],
+                                child: const Center(
+                                    child: Icon(Icons.book,
+                                        size: 50, color: Colors.grey)),
+                              ),
                       ),
                     ),
                     Padding(
@@ -308,24 +325,36 @@ final books = data.entries.map((e) {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(book.title,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
                               overflow: TextOverflow.ellipsis),
-                          Text('${book.price} VNĐ',
-                              style: const TextStyle(color: Colors.redAccent)),
+                          Text(
+                            '${book.price} VNĐ',
+                            // ⭐️ [SỬA] Dùng màu tertiary (thường là màu nổi bật)
+                            style: TextStyle(color: colorScheme.tertiary),
+                          ),
                           Text(book.author,
-                              style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                          Text(book.genre,
                               style: const TextStyle(
-                                  fontSize: 12, color: Colors.blueAccent)),
+                                  fontSize: 12, color: Colors.grey)),
+                          Text(
+                            book.genre,
+                            style: TextStyle(
+                              fontSize: 12,
+                              // ⭐️ [SỬA] Dùng màu secondary
+                              color: colorScheme.secondary,
+                            ),
+                          ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                icon: Icon(Icons.edit,
+                                    color: colorScheme.secondary), // 👈 Sửa
                                 onPressed: () => _openBookForm(book: book),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon: Icon(Icons.delete,
+                                    color: colorScheme.error), // 👈 Sửa
                                 onPressed: () => _deleteBook(book.id),
                               ),
                             ],
