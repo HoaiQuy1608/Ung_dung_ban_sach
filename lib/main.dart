@@ -41,10 +41,14 @@ class MyApp extends StatelessWidget {
             title: 'Bookify',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme.copyWith(
-              textTheme: GoogleFonts.nunitoTextTheme(AppTheme.lightTheme.textTheme),
+              textTheme: GoogleFonts.nunitoTextTheme(
+                AppTheme.lightTheme.textTheme,
+              ),
             ),
             darkTheme: AppTheme.darkTheme.copyWith(
-              textTheme: GoogleFonts.nunitoTextTheme(AppTheme.darkTheme.textTheme),
+              textTheme: GoogleFonts.nunitoTextTheme(
+                AppTheme.darkTheme.textTheme,
+              ),
             ),
             themeMode: themeProvider.themeMode,
             builder: EasyLoading.init(),
@@ -55,4 +59,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

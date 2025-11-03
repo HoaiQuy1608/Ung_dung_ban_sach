@@ -10,7 +10,6 @@ import 'checkout_screen.dart';
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
-  // Hộp thoại xác nhận đặt hàng
   Future<bool> _confirmCheckout(BuildContext context, double total) async {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     final String formattedTotal = cartProvider.formatPrice(total);
@@ -37,7 +36,6 @@ class CartScreen extends StatelessWidget {
         false;
   }
 
-  // Hộp thoại xác nhận xóa sản phẩm khỏi giỏ hàng
   Future<bool> _confirmDelete(BuildContext context, String bookTitle) async {
     return await showDialog<bool>(
           context: context,

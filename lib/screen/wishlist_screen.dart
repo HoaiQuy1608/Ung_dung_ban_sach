@@ -1,5 +1,4 @@
-// wishlist_screen.dart
-import 'dart:convert'; // 👈 [SỬA] Thêm import để dùng base64Decode
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ungdungbansach/providers/auth_provider.dart';
@@ -53,7 +52,10 @@ class WishlistScreen extends StatelessWidget {
             .toList();
 
         return Scaffold(
-          appBar: AppBar(title: const Text('Sách Yêu Thích'), centerTitle: true),
+          appBar: AppBar(
+            title: const Text('Sách Yêu Thích'),
+            centerTitle: true,
+          ),
           body: favoriteBooks.isEmpty
               ? Center(
                   child: Column(
@@ -96,13 +98,18 @@ class WishlistScreen extends StatelessWidget {
                           icon: const Icon(Icons.favorite, color: Colors.red),
                           onPressed: () async {
                             // Toggle favorite
-                            await bookProvider.toggleFavorite(book.id, authProvider.currentUser!.id);
+                            await bookProvider.toggleFavorite(
+                              book.id,
+                              authProvider.currentUser!.id,
+                            );
 
                             // Cập nhật local user favorites
-                            final updatedUser = authProvider.currentUser!.copyWith(
-                              favorites: Set.from(authProvider.currentUser!.favorites)
-                                ..remove(book.id),
-                            );
+                            final updatedUser = authProvider.currentUser!
+                                .copyWith(
+                                  favorites: Set.from(
+                                    authProvider.currentUser!.favorites,
+                                  )..remove(book.id),
+                                );
                             authProvider.setCurrentUser(updatedUser);
                           },
                         ),
@@ -122,4 +129,3 @@ class WishlistScreen extends StatelessWidget {
     );
   }
 }
-

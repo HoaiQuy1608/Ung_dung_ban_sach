@@ -1,4 +1,3 @@
-// lib/screen/admin/admin_settings_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '/providers/theme_provider.dart';
@@ -8,7 +7,6 @@ import '../login_screen.dart';
 class AdminSettingsScreen extends StatelessWidget {
   const AdminSettingsScreen({super.key});
 
-  // 🟣 Hộp thoại xác nhận đăng xuất
   Future<void> _confirmLogout(BuildContext context) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
@@ -51,11 +49,9 @@ class AdminSettingsScreen extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
-      // ❌ Không cần AppBar nữa vì Dashboard đã có tiêu đề
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // 🌗 Chuyển chế độ nền sáng / tối
           ListTile(
             leading: Icon(
               themeProvider.themeMode == ThemeMode.dark

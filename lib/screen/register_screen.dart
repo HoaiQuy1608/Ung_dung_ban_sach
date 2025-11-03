@@ -33,60 +33,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
     return null;
   }
-Future<void> _handleRegister() async {
-  setState(() {
-    _errorMessage = null;
-  });
 
-  if (!_formKey.currentState!.validate()) return;
+  Future<void> _handleRegister() async {
+    setState(() {
+      _errorMessage = null;
+    });
 
-  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (!_formKey.currentState!.validate()) return;
 
-  // Hiển thị loading khi đang xử lý
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (_) => const Center(child: CircularProgressIndicator()),
-  );
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-  try {
-    final success = await authProvider.register(
-      _emailController.text.trim(),
-      _passwordController.text.trim(),
+    // Hiển thị loading khi đang xử lý
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
     );
 
-    Navigator.of(context).pop(); // Đóng loading
+    try {
+      final success = await authProvider.register(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
 
-    if (success) {
-      // Thành công → quay lại màn hình đăng nhập
-      if (mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Đăng ký thành công! Vui lòng đăng nhập.',
-              style: GoogleFonts.roboto(),
+      Navigator.of(context).pop(); // Đóng loading
+
+      if (success) {
+        // Thành công → quay lại màn hình đăng nhập
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Đăng ký thành công! Vui lòng đăng nhập.',
+                style: GoogleFonts.roboto(),
+              ),
+              backgroundColor: AppColors.successGreen,
+              duration: const Duration(seconds: 3),
             ),
-            backgroundColor: AppColors.successGreen,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+          );
+        }
+      } else {
+        // Email trùng hoặc lỗi Firebase
+        setState(() {
+          _errorMessage =
+              'Email đã tồn tại hoặc không hợp lệ. Vui lòng chọn email khác.';
+        });
       }
-    } else {
-      // Email trùng hoặc lỗi Firebase
+    } catch (e) {
+      Navigator.of(context).pop(); // Đóng loading
       setState(() {
-        _errorMessage =
-            'Email đã tồn tại hoặc không hợp lệ. Vui lòng chọn email khác.';
+        _errorMessage = 'Đã xảy ra lỗi khi đăng ký: $e';
       });
     }
-  } catch (e) {
-    Navigator.of(context).pop(); // Đóng loading
-    setState(() {
-      _errorMessage = 'Đã xảy ra lỗi khi đăng ký: $e';
-    });
   }
-}
-  
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -102,10 +103,10 @@ Future<void> _handleRegister() async {
     return Scaffold(
       appBar: AppBar(
         title: Text('ĐĂNG KÝ', style: GoogleFonts.merriweather()),
-        backgroundColor: colorScheme.primary, // Dùng màu primary
-        foregroundColor: colorScheme.onPrimary, // Chữ trắng
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
       ),
-      backgroundColor: colorScheme.surface, // Nền sáng
+      backgroundColor: colorScheme.surface,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(30.0),
@@ -120,7 +121,7 @@ Future<void> _handleRegister() async {
                   style: GoogleFonts.playfairDisplay(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: colorScheme.primary, // Dùng màu primary
+                    color: colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 40),
@@ -133,9 +134,7 @@ Future<void> _handleRegister() async {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: colorScheme.errorContainer,
-                        borderRadius: BorderRadius.circular(
-                          12,
-                        ), // Bo góc mềm mại hơn
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: colorScheme.error),
                       ),
                       child: Text(

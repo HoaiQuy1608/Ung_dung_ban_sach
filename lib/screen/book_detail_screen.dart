@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import '../providers/auth_provider.dart';
 import '../providers/cart_provider.dart';
 import '../providers/book_service.dart';
@@ -243,7 +242,6 @@ class BookDetailScreen extends StatelessWidget {
                         ],
                       ),
 
-                      // ✅ Thêm dòng hiển thị thể loại
                       const SizedBox(height: 10),
                       Row(
                         children: [

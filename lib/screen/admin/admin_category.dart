@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:toastification/toastification.dart';
-import '/models/category_model.dart'; // 👈 import model
+import '/models/category_model.dart';
 
 class AdminCategory extends StatefulWidget {
   const AdminCategory({Key? key}) : super(key: key);
@@ -12,7 +12,6 @@ class AdminCategory extends StatefulWidget {
 }
 
 class _AdminCategoryState extends State<AdminCategory> {
-  // ... (Tất cả logic initState, _showCategoryDialog, _deleteCategory... giữ nguyên) ...
   late final DatabaseReference _dbRef;
 
   @override
@@ -32,7 +31,9 @@ class _AdminCategoryState extends State<AdminCategory> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(category == null ? 'Thêm thể loại' : 'Chỉnh sửa thể loại'),
+          title: Text(
+            category == null ? 'Thêm thể loại' : 'Chỉnh sửa thể loại',
+          ),
           content: TextField(
             controller: controller,
             decoration: const InputDecoration(
@@ -42,8 +43,9 @@ class _AdminCategoryState extends State<AdminCategory> {
           ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Hủy')),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Hủy'),
+            ),
             ElevatedButton(
               onPressed: () async {
                 final newName = controller.text.trim();
@@ -99,8 +101,9 @@ class _AdminCategoryState extends State<AdminCategory> {
         content: Text('Bạn có chắc muốn xóa thể loại "${category.name}"?'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Hủy')),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
+          ),
           ElevatedButton(
             onPressed: () async {
               try {
@@ -123,7 +126,7 @@ class _AdminCategoryState extends State<AdminCategory> {
               if (mounted) Navigator.pop(context);
             },
             child: const Text('Xóa'),
-          )
+          ),
         ],
       ),
     );
@@ -131,20 +134,12 @@ class _AdminCategoryState extends State<AdminCategory> {
 
   @override
   Widget build(BuildContext context) {
-    // ⭐️ [SỬA] Lấy màu sắc từ Theme
     final colorScheme = Theme.of(context).colorScheme;
 
     return ToastificationWrapper(
       child: Scaffold(
-        // ⭐️ [XÓA] Xóa AppBar
-        // appBar: AppBar(
-        //   title: const Text('Quản lý thể loại sách'),
-        //   backgroundColor: Colors.deepPurple, // 👈 Xóa
-        // ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _showCategoryDialog(),
-          // ⭐️ [XÓA] Xóa màu
-          // backgroundColor: Colors.deepPurple,
           child: const Icon(Icons.add),
         ),
         body: StreamBuilder<DatabaseEvent>(
@@ -175,22 +170,20 @@ class _AdminCategoryState extends State<AdminCategory> {
                 final item = categories[index];
                 return Card(
                   child: ListTile(
-                    leading: Icon(
-                      Icons.category,
-                      color: colorScheme.secondary, // 👈 Sửa
-                    ),
+                    leading: Icon(Icons.category, color: colorScheme.secondary),
                     title: Text(item.name),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.edit,
-                              color: colorScheme.secondary), // 👈 Sửa
+                          icon: Icon(Icons.edit, color: colorScheme.secondary),
                           onPressed: () => _showCategoryDialog(category: item),
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete,
-                              color: colorScheme.error), // 👈 Sửa
+                          icon: Icon(
+                            Icons.delete,
+                            color: colorScheme.error,
+                          ), // 👈 Sửa
                           onPressed: () => _deleteCategory(item),
                         ),
                       ],

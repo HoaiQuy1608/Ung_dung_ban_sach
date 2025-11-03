@@ -39,9 +39,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       0,
       (sum, item) => sum + (item.book.price * item.quantity),
     );
-    
-    // ⭐️ [THÊM MỚI] Logic tự động điền thông tin
-    // Lấy thông tin user từ AuthProvider
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final currentUser = authProvider.currentUser;
 
@@ -125,7 +123,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       appBar: AppBar(title: const Text('Xác Nhận Đơn Hàng')),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(20), // <-- Đã sửa lỗi padding
+          padding: const EdgeInsets.all(20),
           child: Form(
             key: _formKey,
             child: Column(
