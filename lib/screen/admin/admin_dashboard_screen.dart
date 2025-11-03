@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '/providers/auth_provider.dart';
 import 'admin_book.dart';
 import 'admin_category.dart';
-import 'admin_setting.dart'; // 👈 [THÊM] Import file cài đặt mới
+import 'admin_setting.dart';
 import '../shared/purchase_history_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -14,10 +14,8 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  int _selectedIndex = 0; // 👈 Chỉ số của tab hiện tại
+  int _selectedIndex = 0;
 
-  // ⭐️ [SỬA] Cập nhật danh sách 5 màn hình
-  // Thêm AdminSettingsScreen() vào cuối
   static const List<Widget> _screens = [
     DashboardHome(), // Tab 0
     BookManagementScreen(), // Tab 1
@@ -26,7 +24,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     AdminSettingsScreen(), // Tab 4
   ];
 
-  // ⭐️ [SỬA] Cập nhật danh sách 5 tiêu đề
   static const List<String> _screenTitles = [
     'Tổng quan',
     'Quản lý Sách',
@@ -43,16 +40,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Lấy màu primary từ theme hiện tại (Light/Dark)
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          _screenTitles[_selectedIndex],
-        ), // 👈 Tiêu đề thay đổi theo tab
-        // ⭐️ [SỬA] Màu AppBar sẽ tự động theo theme
-        // Không cần nút Logout ở đây nữa vì đã chuyển vào Cài đặt
+        title: Text(_screenTitles[_selectedIndex]),
         actions: [
           // Bạn có thể thêm nút thông báo cho Admin ở đây nếu muốn
           // IconButton(
@@ -61,14 +53,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           // ),
         ],
       ),
-      // ⭐️ [SỬA] Hiển thị các màn hình dùng IndexedStack để giữ state
       body: IndexedStack(index: _selectedIndex, children: _screens),
-      // ⭐️ [SỬA] Cập nhật BottomNavigationBar
       bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed, // 👈 Luôn hiển thị label
+        type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        // ⭐️ [SỬA] Màu sắc lấy từ theme
         selectedItemColor: colorScheme.primary,
         unselectedItemColor: Colors.grey,
         items: const [
@@ -103,18 +92,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 }
 
-// --- ⭐️ [SỬA] Giao diện DashboardHome mới ---
-// Giao diện này tập trung vào thống kê, hữu ích hơn cho Admin
 class DashboardHome extends StatelessWidget {
   const DashboardHome({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Lấy theme
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
-    // TODO: Thay thế dữ liệu giả này bằng Provider của bạn
     const int totalOrders = 58;
     const double totalRevenue = 12500000;
     const int totalUsers = 120;
@@ -136,12 +121,11 @@ class DashboardHome extends StatelessWidget {
           // 4 thẻ thống kê
           GridView.count(
             crossAxisCount: 2,
-            shrinkWrap: true, // 👈 Bắt buộc trong SingleChildScrollView
-            physics:
-                const NeverScrollableScrollPhysics(), // 👈 Không cho grid cuộn
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 1.5, // 👈 Điều chỉnh tỉ lệ thẻ
+            childAspectRatio: 1.5,
             children: [
               _buildStatCard(
                 context,
@@ -154,8 +138,7 @@ class DashboardHome extends StatelessWidget {
                 context,
                 icon: Icons.attach_money,
                 label: 'Tổng Doanh thu',
-                // value: cartProvider.formatPrice(totalRevenue), // 👈 Dùng formatter của bạn
-                value: "12,500,000 đ", // Dùng tạm
+                value: "12,500,000 đ",
                 color: colorScheme.tertiary,
               ),
               _buildStatCard(
@@ -175,7 +158,6 @@ class DashboardHome extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          // Danh sách đơn hàng gần đây
           Text(
             'Đơn hàng Gần đây',
             style: textTheme.headlineSmall?.copyWith(
@@ -183,7 +165,6 @@ class DashboardHome extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          // TODO: Thay bằng ListView.builder từ OrderProvider
           Card(
             child: ListTile(
               leading: const CircleAvatar(child: Icon(Icons.person)),
@@ -193,9 +174,7 @@ class DashboardHome extends StatelessWidget {
                 '550,000 đ',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              onTap: () {
-                // TODO: Điều hướng đến chi tiết đơn hàng
-              },
+              onTap: () {},
             ),
           ),
           Card(
@@ -215,7 +194,6 @@ class DashboardHome extends StatelessWidget {
     );
   }
 
-  // Widget helper cho thẻ thống kê
   Widget _buildStatCard(
     BuildContext context, {
     required IconData icon,
@@ -226,14 +204,14 @@ class DashboardHome extends StatelessWidget {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: color.withOpacity(0.1), // 👈 Màu nền mờ
+      color: color.withOpacity(0.1),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(icon, size: 32, color: color), // 👈 Icon với màu chính
+            Icon(icon, size: 32, color: color),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -241,7 +219,7 @@ class DashboardHome extends StatelessWidget {
                   value,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: color, // 👈 Giá trị với màu chính
+                    color: color,
                   ),
                 ),
                 Text(label, style: Theme.of(context).textTheme.bodyMedium),

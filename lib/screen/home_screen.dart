@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
-
 import '/providers/book_service.dart';
 import '/widgets/book_card.dart';
 import 'book_detail_screen.dart';
@@ -28,7 +27,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // LOGIC HIỂN THỊ TIÊU ĐỀ ĐÃ ĐƯỢC GIỮ LẠI
   String titleForIndex(int i) {
     switch (i) {
       case 0:
@@ -51,7 +49,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final bookService = Provider.of<BookService>(context);
 
     final List<Widget> pages = [
-      // Home grid (Giữ nguyên)
       LayoutBuilder(
         builder: (context, constraints) {
           final crossAxisCount = constraints.maxWidth > 900
@@ -98,7 +95,6 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
-      // Các màn hình con (Giữ nguyên)
       const SearchScreen(),
       const CartScreen(),
       const NotificationsScreen(),
@@ -106,15 +102,12 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     return Scaffold(
-      // SỬA ĐỔI: Chỉ hiển thị tiêu đề nếu không phải là Trang chủ
       appBar: AppBar(
-        // Chỉ hiển thị tiêu đề nếu không ở tab Home (0), vì Home Grid tự nói lên nó là Trang chủ
         title: Text(
           _currentIndex == 0 ? 'Bookify' : titleForIndex(_currentIndex),
         ),
         actions: const [],
       ),
-      // Bọc IndexedStack bằng SafeArea
       body: SafeArea(
         child: IndexedStack(index: _currentIndex, children: pages),
       ),

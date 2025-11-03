@@ -22,7 +22,6 @@ class OrderProvider with ChangeNotifier {
   List<Order> get orders => _orders;
   bool get isLoading => _isLoading;
 
-  // ------------------ Fetch (one-time) ------------------
   Future<void> fetchOrders(String userId) async {
     try {
       _isLoading = true;
@@ -62,7 +61,6 @@ class OrderProvider with ChangeNotifier {
     }
   }
 
-  // ------------------ Realtime listeners ------------------
   void startListenUserOrders(String userId) {
     _userOrdersSub?.cancel();
     _userOrdersSub = _ordersRef
@@ -114,7 +112,6 @@ class OrderProvider with ChangeNotifier {
     required String phone,
     required String address,
   }) async {
-    // 1. check stock first
     final Map<String, int> currentStocks = {};
     for (var item in items) {
       final snap = await _booksRef.child(item.book.id).child('stock').get();
@@ -125,7 +122,6 @@ class OrderProvider with ChangeNotifier {
       currentStocks[item.book.id] = stock;
     }
 
-    // 2. build multiPath update
     final Map<String, dynamic> multiPath = {};
     final newOrderKey = _ordersRef.push().key;
     if (newOrderKey == null) throw Exception('Không thể tạo Order key');
@@ -144,13 +140,11 @@ class OrderProvider with ChangeNotifier {
 
     multiPath['/orders/$newOrderKey'] = newOrder.toMap();
 
-    // decrement stock for each book
     for (var item in items) {
       final newStock = currentStocks[item.book.id]! - item.quantity;
       multiPath['/books/${item.book.id}/stock'] = newStock;
     }
 
-    // notification
     final notifKey = _notificationsRef.push().key;
     if (notifKey != null) {
       multiPath['/notifications/$notifKey'] = {
@@ -162,7 +156,6 @@ class OrderProvider with ChangeNotifier {
       };
     }
 
-    // 3. update atomically
     try {
       await FirebaseDatabase.instance.ref().update(multiPath);
       // reflect locally (prepend)
@@ -174,9 +167,6 @@ class OrderProvider with ChangeNotifier {
     }
   }
 
-  // ------------------ Update Status (admin) ------------------
-  /// Updates status and sends notification. If status == 'Cancelled' and previous != 'Cancelled',
-  /// it will restock items (via transactions).
   Future<void> updateOrderStatus(String orderId, String newStatus) async {
     try {
       final orderSnap = await _ordersRef.child(orderId).get();
@@ -207,7 +197,6 @@ class OrderProvider with ChangeNotifier {
         }
       }
 
-      // prepare notification content
       String title = 'Đơn hàng của bạn đã được cập nhật';
       String message =
           'Đơn #${orderId.substring(orderId.length - 6)} đã đổi trạng thái thành $newStatus.';
@@ -235,10 +224,8 @@ class OrderProvider with ChangeNotifier {
           break;
       }
 
-      // apply status update
       await FirebaseDatabase.instance.ref().update(multiPath);
 
-      // send notification
       final notifKey = _notificationsRef.push().key;
       if (notifKey != null) {
         await _notificationsRef.child(notifKey).set({
@@ -251,7 +238,6 @@ class OrderProvider with ChangeNotifier {
         });
       }
 
-      // update local cache if present
       final idx = _orders.indexWhere((o) => o.orderId == orderId);
       if (idx != -1) {
         final old = _orders[idx];
@@ -274,7 +260,6 @@ class OrderProvider with ChangeNotifier {
     }
   }
 
-  // ------------------ User cancel with 30-minute rule ------------------
   Future<void> userCancelOrder(String orderId, String userId) async {
     final orderSnap = await _ordersRef.child(orderId).get();
     if (!orderSnap.exists) throw Exception('Không tìm thấy đơn hàng');
@@ -295,7 +280,6 @@ class OrderProvider with ChangeNotifier {
     await updateOrderStatus(orderId, 'Đã hủy');
   }
 
-  // ------------------ Helpers ------------------
   String formatDate(DateTime date) {
     final DateFormat formatter = DateFormat('dd/MM/yyyy HH:mm');
     return formatter.format(date);

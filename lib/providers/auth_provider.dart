@@ -28,7 +28,7 @@ class AuthProvider extends ChangeNotifier {
     final usersRef = _database.child('users');
     final snapshot = await usersRef.orderByChild('email').equalTo(email).get();
 
-    if (snapshot.exists) return false; // Email đã tồn tại
+    if (snapshot.exists) return false;
 
     final id = _uuid.v4();
     final newUser = User(
@@ -57,8 +57,9 @@ class AuthProvider extends ChangeNotifier {
     final snapshot = await usersRef.orderByChild('email').equalTo(email).get();
 
     if (snapshot.exists) {
-      final userMap =
-          Map<String, dynamic>.from(snapshot.children.first.value as Map);
+      final userMap = Map<String, dynamic>.from(
+        snapshot.children.first.value as Map,
+      );
       final user = User.fromMap(userMap);
       if (user.password == password) {
         _currentUser = user;
@@ -72,9 +73,7 @@ class AuthProvider extends ChangeNotifier {
   /// -----------------------------
   /// 🔹 Đăng nhập bằng Google
   /// -----------------------------
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email', 'profile'],
-  );
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
 
   Future<bool> loginWithGoogle() async {
     try {
@@ -86,14 +85,18 @@ class AuthProvider extends ChangeNotifier {
       final photoUrl = googleUser.photoUrl ?? '';
 
       final usersRef = _database.child('users');
-      final snapshot = await usersRef.orderByChild('email').equalTo(email).get();
+      final snapshot = await usersRef
+          .orderByChild('email')
+          .equalTo(email)
+          .get();
 
       User user;
 
       if (snapshot.exists) {
         // 🔹 Người dùng đã tồn tại trong DB
-        final userMap =
-            Map<String, dynamic>.from(snapshot.children.first.value as Map);
+        final userMap = Map<String, dynamic>.from(
+          snapshot.children.first.value as Map,
+        );
         user = User.fromMap(userMap);
       } else {
         // 🔹 Người dùng mới → tạo mới
@@ -101,7 +104,7 @@ class AuthProvider extends ChangeNotifier {
         user = User(
           id: id,
           email: email,
-          password: '', // không cần mật khẩu cho Google
+          password: '',
           role: UserRole.user,
           name: displayName,
         );
@@ -158,6 +161,4 @@ class AuthProvider extends ChangeNotifier {
     _currentUser = updatedUser;
     notifyListeners();
   }
-
-  
 }

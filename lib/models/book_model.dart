@@ -1,4 +1,3 @@
-// lib/models/book_model.dart
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:firebase_database/firebase_database.dart';

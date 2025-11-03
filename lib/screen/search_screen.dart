@@ -98,7 +98,6 @@ class _SearchScreenState extends State<SearchScreen> {
     final bookService = Provider.of<BookService>(context);
     final filteredBooks = _getFilteredBooks(bookService);
 
-    // ✅ Gộp “Tất cả” với danh sách category từ Firebase
     final allCategories = ['Tất cả', ..._categories.map((c) => c.name)];
 
     return Scaffold(
@@ -130,7 +129,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
       body: Column(
         children: [
-          // 🎯 Thanh chọn danh mục động từ Firebase
+          // 🎯 Thanh chọn danh mục
           SizedBox(
             height: 45,
             child: ListView.builder(

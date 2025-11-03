@@ -1,4 +1,3 @@
-// lib/providers/book_service.dart
 import 'package:flutter/foundation.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../models/book_model.dart';
