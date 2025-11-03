@@ -291,7 +291,8 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
       children: [
         const Text('Trạng thái đơn hàng:'),
         DropdownButton<String>(
-          value: order.status,
+          icon: const SizedBox.shrink(), 
+          value: statuses.contains(order.status) ? order.status : null, // ✅ an toàn
           items: statuses
               .map(
                 (s) => DropdownMenuItem(
@@ -300,6 +301,7 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
                 ),
               )
               .toList(),
+          hint: const Text('Chọn trạng thái'),
           onChanged: (newStatus) {
             if (newStatus != null && newStatus != order.status) {
               orderProvider.updateOrderStatus(order.orderId, newStatus);

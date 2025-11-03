@@ -18,11 +18,11 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
   final _categoryRef = FirebaseDatabase.instance.ref('categories');
   final _picker = ImagePicker();
 
+  // Controllers
   final _titleController = TextEditingController();
   final _authorController = TextEditingController();
   final _priceController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _stockController = TextEditingController();
 
   List<String> _categories = [];
   String? _selectedCategory;
@@ -30,7 +30,6 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
 
   bool _isEditing = false;
   String? _editingId;
-  BookStatus _selectedStatus = BookStatus.available;
 
   @override
   void initState() {
@@ -38,8 +37,8 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
     _loadCategories();
   }
 
-  /// 🔹 Lấy danh sách thể loại từ Realtime Database
-  Future<void> _loadCategories() async {
+  /// 🔹 Load danh sách thể loại
+  Future<void> _loadCategories({String? currentGenre}) async {
     final snapshot = await _categoryRef.get();
     if (snapshot.exists && snapshot.value is Map) {
       final data = snapshot.value as Map<dynamic, dynamic>;
@@ -62,6 +61,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
     }
   }
 
+  /// 🔹 Hiển thị thông báo
   void _showToast(String message, {bool success = true}) {
     toastification.show(
       context: context,
@@ -71,21 +71,22 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
     );
   }
 
+  /// 🔹 Chuyển ảnh sang Base64
   Future<String> _convertToBase64(File file) async {
     final bytes = await file.readAsBytes();
     return base64Encode(bytes);
   }
 
   /// 🔹 Mở form thêm / sửa sách
-  void _openBookForm({Book? book}) {
+  void _openBookForm({Book? book}) async {
+    _pickedImage = null;
+
     if (book != null) {
       _titleController.text = book.title;
       _authorController.text = book.author;
       _priceController.text = book.price.toString();
       _descriptionController.text = book.description;
-      _stockController.text = book.stock.toString();
       _selectedCategory = book.genre;
-      _selectedStatus = book.status;
       _isEditing = true;
       _editingId = book.id;
 
@@ -96,9 +97,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
       _authorController.clear();
       _priceController.clear();
       _descriptionController.clear();
-      _pickedImage = null;
       _selectedCategory = null;
-      _selectedStatus = BookStatus.available;
       _isEditing = false;
       _editingId = null;
 
@@ -111,8 +110,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
           return Padding(
@@ -128,40 +126,54 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                   Text(
                     _isEditing ? 'Chỉnh sửa sách' : 'Thêm sách mới',
                     style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 15),
+
+                  // Ảnh bìa
                   GestureDetector(
                     onTap: () async {
-                      final picked = await _picker.pickImage(
-                        source: ImageSource.gallery,
-                      );
+                      final picked =
+                          await _picker.pickImage(source: ImageSource.gallery);
                       if (picked != null) {
                         setModalState(() => _pickedImage = File(picked.path));
                       }
                     },
                     child: _pickedImage != null
-                        ? Image.file(
-                            _pickedImage!,
+                        ? Image.file(_pickedImage!,
                             height: 150,
                             width: double.infinity,
-                            fit: BoxFit.cover,
-                          )
+                            fit: BoxFit.cover)
                         : (book?.imageBase64.isNotEmpty ?? false)
-                            ? Image.memory(base64Decode(book!.imageBase64),
-                                height: 150,
-                                width: double.infinity,
-                                fit: BoxFit.cover)
+                            ? Builder(
+                                builder: (_) {
+                                  try {
+                                    return Image.memory(
+                                      base64Decode(book!.imageBase64),
+                                      height: 150,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    );
+                                  } catch (_) {
+                                    return Container(
+                                      height: 150,
+                                      width: double.infinity,
+                                      color: Colors.grey[300],
+                                      child: const Center(
+                                          child: Text('Ảnh không hợp lệ')),
+                                    );
+                                  }
+                                },
+                              )
                             : Container(
                                 height: 150,
                                 width: double.infinity,
                                 color: Colors.grey[300],
-                                child:
-                                    const Center(child: Text('Chọn ảnh sách')),
+                                child: const Center(
+                                    child: Text('Chọn ảnh sách')),
                               ),
                   ),
+
                   const SizedBox(height: 15),
                   TextField(
                     controller: _titleController,
@@ -177,58 +189,32 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                     keyboardType: TextInputType.number,
                   ),
 
-                  /// Dropdown chọn thể loại
                   DropdownButtonFormField<String>(
                     decoration: const InputDecoration(labelText: 'Thể loại'),
                     value: _selectedCategory,
                     items: _categories
-                        .map(
-                          (cat) =>
-                              DropdownMenuItem(value: cat, child: Text(cat)),
-                        )
+                        .map((cat) => DropdownMenuItem(
+                              value: cat,
+                              child: Text(cat),
+                            ))
                         .toList(),
                     onChanged: (val) =>
                         setModalState(() => _selectedCategory = val),
                   ),
-                  TextField(
-                    controller: _stockController,
-                    decoration: const InputDecoration(
-                      labelText: 'Số lượng tồn kho',
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  DropdownButtonFormField<BookStatus>(
-                    decoration: const InputDecoration(
-                      labelText: 'Trạng thái sách',
-                    ),
-                    value: _selectedStatus,
-                    items: BookStatus.values
-                        .map(
-                          (status) => DropdownMenuItem(
-                            value: status,
-                            child: Text(_statusToVietnamese(status)),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (val) =>
-                        setModalState(() => _selectedStatus = val!),
-                  ),
+
                   TextField(
                     controller: _descriptionController,
                     decoration: const InputDecoration(labelText: 'Mô tả'),
                     maxLines: 3,
                   ),
                   const SizedBox(height: 20),
+
                   ElevatedButton(
                     onPressed: () async {
                       if (_titleController.text.isEmpty ||
                           _priceController.text.isEmpty ||
-                          _selectedCategory == null ||
-                          _stockController.text.isEmpty) {
-                        _showToast(
-                          'Vui lòng nhập đủ thông tin',
-                          success: false,
-                        );
+                          _selectedCategory == null) {
+                        _showToast('Vui lòng nhập đủ thông tin', success: false);
                         return;
                       }
 
@@ -245,8 +231,6 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                         imageBase64: base64Image,
                         price: double.tryParse(_priceController.text) ?? 0.0,
                         description: _descriptionController.text.trim(),
-                        stock: int.tryParse(_stockController.text) ?? 0,
-                        status: _selectedStatus,
                         rating: book?.rating ?? 0,
                       );
 
@@ -258,9 +242,8 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                           _showToast('Cập nhật thành công ✅');
                         } else {
                           final newRef = _bookRef.push();
-                          await newRef.set(
-                            newBook.copyWith(id: newRef.key).toJson(),
-                          );
+                          await newRef
+                              .set(newBook.copyWith(id: newRef.key).toJson());
                           _showToast('Thêm thành công ✅');
                         }
                       } catch (e) {
@@ -280,6 +263,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
     );
   }
 
+  /// 🔹 Xoá sách
   Future<void> _deleteBook(String id) async {
     try {
       await _bookRef.child(id).remove();
@@ -309,21 +293,21 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
           }
 
           final rawData = snapshot.data!.snapshot.value;
+
           if (rawData is! Map) {
             return const Center(child: Text('Dữ liệu sách không hợp lệ'));
           }
 
           final data = rawData as Map<dynamic, dynamic>;
-          final books = data.entries
-              .map((e) {
-                final value = e.value;
-                if (value is Map) {
-                  return Book.fromJson(e.key, Map<String, dynamic>.from(value));
-                }
-                return null;
-              })
-              .whereType<Book>()
-              .toList();
+          final books = data.entries.map((e) {
+            final value = e.value;
+            if (value is Map) {
+              return Book.fromJson(e.key, Map<String, dynamic>.from(value));
+            } else {
+              debugPrint('⚠️ Dòng dữ liệu không hợp lệ: $value');
+              return null;
+            }
+          }).whereType<Book>().toList();
 
           return GridView.builder(
             padding: const EdgeInsets.all(10),
@@ -331,37 +315,29 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
               crossAxisCount: 2,
               mainAxisSpacing: 10,
               crossAxisSpacing: 10,
-              childAspectRatio: 0.68,
+              childAspectRatio: 0.65,
             ),
             itemCount: books.length,
             itemBuilder: (context, i) {
               final book = books[i];
               return Card(
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                    borderRadius: BorderRadius.circular(10)),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(
                       child: ClipRRect(
                         borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(10),
-                        ),
+                            top: Radius.circular(10)),
                         child: (book.imageBase64.isNotEmpty)
-                            ? Image.memory(
-                                base64Decode(book.imageBase64),
-                                fit: BoxFit.cover,
-                              )
+                            ? Image.memory(base64Decode(book.imageBase64),
+                                fit: BoxFit.cover)
                             : Container(
                                 color: Colors.grey[200],
                                 child: const Center(
-                                  child: Icon(
-                                    Icons.book,
-                                    size: 50,
-                                    color: Colors.grey,
-                                  ),
-                                ),
+                                    child: Icon(Icons.book,
+                                        size: 50, color: Colors.grey)),
                               ),
                       ),
                     ),
@@ -370,34 +346,17 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            book.title,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          Text(book.title,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis),
                           Text(
                             '${book.price} VNĐ',
                             style: TextStyle(color: colorScheme.tertiary),
                           ),
-                          Text(
-                            'Kho: ${book.stock}',
-                            style: TextStyle(
-                              color: book.stock > 0
-                                  ? Colors.green
-                                  : colorScheme.error,
-                            ),
-                          ),
-                          Text(
-                            'Trạng thái: ${_statusToVietnamese(book.status)}',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          Text(
-                            book.author,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
+                          Text(book.author,
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.grey)),
                           Text(
                             book.genre,
                             style: TextStyle(
@@ -410,19 +369,19 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                             children: [
                               IconButton(
                                 icon: Icon(Icons.edit,
-                                    color: colorScheme.secondary), // 👈 Sửa
+                                    color: colorScheme.secondary),
                                 onPressed: () => _openBookForm(book: book),
                               ),
                               IconButton(
                                 icon: Icon(Icons.delete,
-                                    color: colorScheme.error), // 👈 Sửa
+                                    color: colorScheme.error),
                                 onPressed: () => _deleteBook(book.id),
                               ),
                             ],
                           ),
                         ],
                       ),
-                    ),
+                    )
                   ],
                 ),
               );
